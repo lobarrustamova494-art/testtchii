@@ -1,244 +1,240 @@
-# EvallBee - Professional OMR Exam Management System v3.0
+# OMR Imtihon Tekshirish Tizimi
 
-A comprehensive exam creation and grading system with **99%+ accuracy** Professional OMR technology, built with React, TypeScript, and Tailwind CSS.
+Professional OMR (Optical Mark Recognition) tizimi - imtihon varaqlarini avtomatik tekshirish uchun.
 
-## 🚀 Professional OMR System v3.0 Features
+## 🚀 Xususiyatlar
 
-### **Revolutionary Multi-Parameter Analysis**
+- ✅ **PDF Generator**: Imtihon varaqlarini avtomatik yaratish
+- ✅ **OMR Detection**: Yuqori aniqlikda javoblarni aniqlash
+- ✅ **QR Code System**: Layout ma'lumotlarini QR code orqali uzatish
+- ✅ **Visual Feedback**: Tekshirilgan varaqni rangli annotatsiya bilan ko'rsatish
+- ✅ **Hybrid System**: OMR + AI verification (ixtiyoriy)
+- ✅ **Responsive UI**: Zamonaviy va qulay interfeys
 
-- **Comparative Analysis**: Eng qora doiracha = javob (absolute threshold emas!)
-- **3-Parameter Scoring**:
-  - **Darkness (50%)**: Average pixel darkness in bubble area
-  - **Coverage (30%)**: Percentage of dark pixels in bubble
-  - **Uniformity (20%)**: Consistency of marking within bubble
-- **Dynamic Thresholds**: Automatically adjusts based on image quality
-- **Professional Accuracy**: **99.2%+** detection rate
+## 📋 Talablar
 
-### **Industrial-Grade Image Processing**
+### Frontend
 
-- **Corner Marker Detection**: Automatic sheet boundary detection
-- **Perspective Correction**: Handles skewed/rotated sheets
-- **Professional Enhancement**:
-  - Grayscale conversion (NO binarization!)
-  - Contrast enhancement (1.3x factor)
-  - Median filter noise reduction
-  - Quality assessment (contrast + sharpness)
+- Node.js 18+
+- npm yoki yarn
 
-### **Advanced Warning System**
+### Backend
 
-- **NO_MARK**: No clear marking detected
-- **MULTIPLE_MARKS**: Multiple variants marked (within 10% threshold)
-- **LOW_DIFFERENCE**: Unclear marking (15% threshold)
-- **Confidence Scoring**: 0-100% reliability for each answer
+- Python 3.9+
+- pip
 
-### **Professional Debug & Visualization**
+## 🛠️ O'rnatish
 
-- **Real-time Processing Log**: Complete step-by-step analysis
-- **Debug Visualization**: Visual overlay showing detected answers
-- **Variant Scoring**: Individual scores for each bubble (A, B, C, D, E)
-- **Quality Indicators**: Image quality assessment and warnings
+### 1. Repository'ni Clone Qilish
 
-## Features Completed ✅
-
-### 1. **User Authentication**
-
-- Login system with user management
-- Session persistence with localStorage
-
-### 2. **Exam Creation System**
-
-- Multi-step exam creation wizard
-- Subject and section management
-- Question count and scoring configuration
-- Multiple exam variants (A, B, C, D sets)
-
-### 3. **Professional PDF Generation**
-
-- Single-page title sheet format
-- **QR Code System**: Automatic layout detection (NEW! ✅)
-  - QR code contains complete layout + structure data
-  - 100% coordinate accuracy
-  - Automatic exam identification
-  - Version control built-in
-- QR codes for exam identification
-- Student ID bubble grid (14mm spacing, 4mm rows)
-- Answer bubbles with proper layout
-- Professional header with date, variant, and time
-- Instructions section with proper formatting
-
-### 4. **Answer Key Management System**
-
-- Set answer keys for all exam variants
-- Visual answer grid interface
-- Edit and save answer keys
-- Random answer generation for testing
-- Progress tracking per variant
-- MongoDB-ready data structure
-
-### 5. **Professional OMR Checking System v3.0** 🆕
-
-- **99.2%+ Accuracy**: Industrial-grade detection
-- **Multi-Parameter Analysis**: Darkness + Coverage + Uniformity
-- **Comparative Algorithm**: Relative analysis (not absolute thresholds)
-- **Professional Processing Pipeline**:
-  - Image validation (800x1100px minimum, A4 ratio check)
-  - Corner marker detection with confidence scoring
-  - Perspective correction and standardization (1240x1754px @ 150 DPI)
-  - Grayscale conversion (weighted: R*0.299 + G*0.587 + B\*0.114)
-  - Contrast enhancement (factor 1.3)
-  - Median filter noise reduction (3x3 kernel)
-  - Quality assessment (contrast + sharpness metrics)
-- **Advanced Detection**:
-  - Precise coordinate calculation (mm to pixel conversion)
-  - Multi-parameter bubble analysis
-  - Comparative scoring (darkest bubble wins)
-  - Professional confidence calculation
-  - Warning system for edge cases
-- **Professional Results**:
-  - Detailed processing logs
-  - Debug visualization with overlays
-  - Confidence bars and quality indicators
-  - Manual correction interface for low-confidence answers
-  - Export to PDF/Excel with professional formatting
-
-### 6. **Dashboard & Navigation**
-
-- Exam management dashboard
-- Seamless navigation between components
-- Real-time statistics and progress tracking
-
-## Technical Implementation
-
-### Architecture
-
-- **Frontend**: React 18 with TypeScript
-- **Styling**: Tailwind CSS with custom components
-- **State Management**: React hooks and localStorage
-- **PDF Generation**: jsPDF with custom layouts
-- **OMR Processing**: Canvas API with professional algorithms
-- **Icons**: Lucide React
-- **Build Tool**: Vite
-
-### Professional OMR Algorithm Specifications
-
-```typescript
-// Professional OMR Configuration
-const OMR_CONFIG = {
-	// Image Processing
-	targetDPI: 150,
-	targetWidth: 1240, // A4 @ 150 DPI
-	targetHeight: 1754,
-	minResolution: { width: 800, height: 1100 },
-
-	// Detection Parameters
-	bubbleRadius: 2.2, // mm
-	bubbleSpacing: 11, // mm
-	cornerMarkerSize: 10, // mm
-	cornerMarkerThreshold: 0.7, // 70% black
-
-	// Analysis Thresholds
-	minDarkness: 35, // %
-	minDifference: 15, // % between first and second
-	multipleMarksThreshold: 10, // % for multiple marks
-	confidenceThreshold: 70, // % for low confidence warning
-
-	// Scoring Weights
-	darknessWeight: 0.5, // 50%
-	coverageWeight: 0.3, // 30%
-	uniformityWeight: 0.2, // 20%
-}
+```bash
+git clone https://github.com/lobarrustamova494-art/testtchii.git
+cd testtchii
 ```
 
-### Key Components
+### 2. Frontend O'rnatish
 
-- `AnswerKeyManager`: Complete answer key management interface
-- `ExamGrading`: Professional OMR system with 99%+ accuracy
-- `ExamCreation`: Multi-step exam creation wizard
-- `ExamPreview`: PDF preview and download system
-- `Dashboard`: Exam management and overview
+```bash
+# Dependencies o'rnatish
+npm install
 
-### Professional OMR Processing Pipeline
+# Development server ishga tushirish
+npm run dev
+```
 
-1. **Image Validation**: Format, size, aspect ratio checks
-2. **Corner Detection**: 4-point boundary detection with confidence
-3. **Perspective Correction**: Geometric transformation to standard view
-4. **Standardization**: Resize to 1240x1754px @ 150 DPI
-5. **Enhancement**: Grayscale + contrast + noise reduction
-6. **Coordinate Calculation**: Precise mm-to-pixel mapping
-7. **Multi-Parameter Analysis**: 3-factor bubble scoring
-8. **Comparative Decision**: Relative analysis (darkest wins)
-9. **Quality Assessment**: Confidence + warning generation
-10. **Professional Results**: Detailed logging + visualization
+Frontend `http://localhost:5173` da ishga tushadi.
 
-## Getting Started
+### 3. Backend O'rnatish
 
-1. **Install Dependencies**
+```bash
+cd backend
 
-   ```bash
-   npm install
-   ```
+# Virtual environment yaratish (ixtiyoriy)
+python -m venv venv
+venv\Scripts\activate  # Windows
+# source venv/bin/activate  # Linux/Mac
 
-2. **Start Development Server**
+# Dependencies o'rnatish
+pip install -r requirements.txt
 
-   ```bash
-   npm run dev
-   ```
+# .env fayl yaratish
+copy .env.example .env
 
-3. **Access Application**
-   - Open http://localhost:3000
-   - Create an account or login
-   - Start creating exams!
+# Backend ishga tushirish
+python main.py
+```
 
-## Professional OMR Usage Workflow
+Backend `http://localhost:8000` da ishga tushadi.
 
-1. **Create Exam**: Use the multi-step wizard to set up subjects, sections, and questions
-2. **Set Answer Keys**: Navigate to "Javob Kalitlari" to configure correct answers for each variant
-3. **Generate PDFs**: Download professional exam sheets with QR codes
-4. **Professional OMR Processing**:
-   - Upload high-quality images (min 800x1100px)
-   - System automatically validates and processes
-   - Real-time quality assessment and warnings
-   - 99.2%+ accuracy with multi-parameter analysis
-5. **Review Results**:
-   - Detailed processing logs
-   - Debug visualization
-   - Confidence indicators
-   - Manual correction for low-confidence answers
-6. **Export**: Professional PDF/Excel reports
+### 4. Environment Variables
 
-## System Status
+Backend `.env` faylida:
 
-✅ **Exam Creation System** - Complete
-✅ **PDF Generation** - Complete with professional formatting
-✅ **Answer Key Management** - Complete with full CRUD operations
-✅ **Professional OMR System v3.0** - **99.2%+ accuracy** with industrial-grade processing
-✅ **Multi-Parameter Analysis** - Darkness + Coverage + Uniformity scoring
-✅ **Comparative Algorithm** - Relative analysis (not absolute thresholds)
-✅ **Professional Processing** - Complete pipeline with quality assessment
-✅ **Advanced Warning System** - Intelligent error detection and reporting
-✅ **Debug Visualization** - Real-time processing logs and visual overlays
-✅ **Quality Assessment** - Image quality indicators and recommendations
-✅ **Manual Correction** - Interface for low-confidence answer adjustment
-✅ **Professional Export** - PDF/Excel with detailed analysis
-🔄 **MongoDB Integration** - Data structure ready, connection pending
-🔄 **Real OMR Hardware** - Professional simulation complete, hardware ready
+```env
+# Groq API (AI verification uchun - ixtiyoriy)
+GROQ_API_KEY=your_api_key_here
 
-## Professional OMR Accuracy Metrics
+# Server settings
+HOST=0.0.0.0
+PORT=8000
 
-- **Overall Accuracy**: 99.2%+ (tested on 10,000+ sheets)
-- **Processing Speed**: 1.8 seconds average per sheet
-- **Quality Assessment**: Real-time contrast + sharpness analysis
-- **Error Detection**: Automatic identification of problematic answers
-- **Confidence Scoring**: 0-100% reliability metrics
-- **Warning System**: Professional categorization of edge cases
+# CORS
+CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+```
 
-## Next Steps for Production
+## 📖 Foydalanish
 
-1. **Backend Integration**: Connect to MongoDB for persistent storage
-2. **Real OMR Hardware**: Replace simulation with actual OMR scanners
-3. **Batch Processing**: Handle hundreds of sheets simultaneously
-4. **Advanced Analytics**: Statistical analysis and reporting
-5. **User Management**: Role-based access control
-6. **API Integration**: RESTful API for external systems
+### 1. Imtihon Yaratish
 
-The system now implements the complete **Professional OMR System v3.0** as specified in `full_checking_system.md` with **99%+ accuracy**, multi-parameter analysis, and industrial-grade processing capabilities.
+1. Login qiling (demo: admin/admin)
+2. "Yangi Imtihon" tugmasini bosing
+3. Imtihon ma'lumotlarini kiriting:
+   - Nomi
+   - Mavzular va bo'limlar
+   - Har bir bo'lim uchun savol soni va ball tizimi
+
+### 2. PDF Yaratish
+
+1. Imtihon yaratilgandan keyin "PDF Yuklab Olish" tugmasini bosing
+2. PDF yuklab olinadi
+3. PDF'ni chop eting (100% scale, A4 qog'oz)
+
+### 3. Varaqni To'ldirish
+
+- Qora qalam ishlating
+- Doirachalarni to'liq to'ldiring
+- Bir savolga faqat bitta javob
+
+### 4. Tekshirish
+
+1. To'ldirilgan varaqni skan qiling (300+ DPI)
+2. "Tekshirish" bo'limiga o'ting
+3. Rasmni yuklang
+4. To'g'ri javoblar kalitini kiriting
+5. "Tekshirish" tugmasini bosing
+
+### 5. Natijalarni Ko'rish
+
+- Umumiy ball va foiz
+- Har bir mavzu bo'yicha natijalar
+- Tekshirilgan varaq rasmi (rangli annotatsiya bilan)
+- Batafsil statistika
+
+## 🎨 Annotatsiya Ranglari
+
+- **Yashil**: To'g'ri javob
+- **Ko'k**: Student to'g'ri belgilagan
+- **Qizil**: Student xato belgilagan
+
+## 📁 Loyiha Strukturasi
+
+```
+testtchii/
+├── backend/                 # Python FastAPI backend
+│   ├── services/           # OMR, grading, annotation
+│   ├── utils/              # Coordinate mapper
+│   ├── main.py             # FastAPI app
+│   └── requirements.txt
+├── src/                    # React frontend
+│   ├── components/         # UI components
+│   ├── services/           # API services
+│   ├── utils/              # PDF generator, storage
+│   └── types/              # TypeScript types
+├── docs/                   # Documentation (MD files)
+└── README.md
+```
+
+## 🔧 Texnik Tafsilotlar
+
+### PDF Layout
+
+- **Format**: A4 (210mm x 297mm)
+- **Grid Start**: X=25mm, Y=149mm
+- **Questions per Row**: 2
+- **Bubble Radius**: 2.5mm
+- **Row Height**: 5.5mm
+- **Corner Markers**: 15mm x 15mm
+
+### OMR Detection
+
+- **Algorithm**: Multi-parameter comparative analysis
+- **Parameters**: Darkness (50%), Coverage (30%), Uniformity (20%)
+- **Accuracy**: 95%+ (yuqori sifatli skan bilan)
+
+### Image Processing
+
+- Perspective correction
+- Adaptive thresholding
+- Noise reduction
+- CLAHE contrast enhancement
+
+## 📚 Hujjatlar
+
+- [FINAL_ALIGNMENT_GUIDE.md](FINAL_ALIGNMENT_GUIDE.md) - To'liq yo'riqnoma
+- [TESTING_GUIDE.md](TESTING_GUIDE.md) - Test qilish bo'yicha qo'llanma
+- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Deploy qilish yo'riqnomasi
+
+## 🐛 Muammolarni Hal Qilish
+
+### PDF Alignment Muammolari
+
+Agar to'rtburchaklar bubble'larga mos kelmasa:
+
+1. **Yangi PDF yarating** (eng muhim!)
+2. Yuqori sifatli chop eting (100% scale)
+3. Yuqori sifatli skan qiling (300+ DPI)
+
+Batafsil: [FINAL_ALIGNMENT_GUIDE.md](FINAL_ALIGNMENT_GUIDE.md)
+
+### Backend Ishlamasa
+
+```bash
+# Loglarni tekshiring
+cd backend
+python main.py
+
+# Dependencies qayta o'rnating
+pip install -r requirements.txt --force-reinstall
+```
+
+### Frontend Ishlamasa
+
+```bash
+# Dependencies qayta o'rnating
+npm install
+
+# Cache tozalash
+npm run build
+```
+
+## 🤝 Hissa Qo'shish
+
+1. Fork qiling
+2. Feature branch yarating (`git checkout -b feature/AmazingFeature`)
+3. Commit qiling (`git commit -m 'Add some AmazingFeature'`)
+4. Push qiling (`git push origin feature/AmazingFeature`)
+5. Pull Request oching
+
+## 📝 Litsenziya
+
+MIT License
+
+## 👥 Muallif
+
+Lobar Rustamova - [GitHub](https://github.com/lobarrustamova494-art)
+
+## 🙏 Minnatdorchilik
+
+- OpenCV - Image processing
+- FastAPI - Backend framework
+- React - Frontend framework
+- jsPDF - PDF generation
+- Groq - AI verification (ixtiyoriy)
+
+## 📞 Aloqa
+
+Savollar yoki muammolar bo'lsa, GitHub Issues orqali murojaat qiling.
+
+---
+
+**Eslatma**: Bu loyiha doimiy ravishda yangilanmoqda. Eng so'nggi versiyani olish uchun repository'ni pull qiling.
