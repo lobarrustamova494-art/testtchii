@@ -24,6 +24,11 @@ class ImageAnnotator:
     THICKNESS = 6  # Very thick lines for maximum visibility
     PADDING = 3    # Increased padding for better visual separation
     
+    # OFFSET for alignment correction (temporary fix)
+    # Positive = move right, Negative = move left
+    X_OFFSET = -50  # Move rectangles 50px to the left
+    Y_OFFSET = 0    # No vertical offset needed
+    
     def __init__(self):
         pass
     
@@ -111,8 +116,8 @@ class ImageAnnotator:
         
         for bubble in bubbles:
             variant = bubble['variant']
-            x = int(round(bubble['x']))  # Round to nearest pixel
-            y = int(round(bubble['y']))  # Round to nearest pixel
+            x = int(round(bubble['x'])) + self.X_OFFSET  # Apply X offset
+            y = int(round(bubble['y'])) + self.Y_OFFSET  # Apply Y offset
             radius = int(round(bubble['radius']))  # Round to nearest pixel
             
             # Calculate rectangle coordinates

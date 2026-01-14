@@ -188,9 +188,9 @@ async def grade_sheet(
         )
         coordinates = coord_mapper.calculate_all()
         
-        # 6. OMR Detection (ADVANCED!)
-        logger.info("STEP 4/6: OMR Detection (Advanced)...")
-        omr_results = advanced_omr_detector.detect_all_answers(
+        # 6. OMR Detection (Using old detector for now)
+        logger.info("STEP 4/6: OMR Detection...")
+        omr_results = omr_detector.detect_all_answers(
             processed['processed'],
             coordinates,
             exam_data
