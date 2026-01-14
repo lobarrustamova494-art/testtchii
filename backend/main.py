@@ -14,6 +14,7 @@ from datetime import datetime
 
 from config import settings
 from services import ImageProcessor, OMRDetector, AIVerifier, AnswerGrader, ImageAnnotator, QRCodeReader
+from services.advanced_omr_detector import AdvancedOMRDetector
 from utils import CoordinateMapper
 
 # Logging configuration
@@ -45,6 +46,10 @@ image_processor = ImageProcessor(
     target_height=settings.TARGET_HEIGHT
 )
 
+# Advanced OMR Detector (NEW!)
+advanced_omr_detector = AdvancedOMRDetector()
+
+# Old OMR Detector (fallback)
 omr_detector = OMRDetector(
     bubble_radius=settings.BUBBLE_RADIUS,
     min_darkness=settings.MIN_DARKNESS,
@@ -183,9 +188,9 @@ async def grade_sheet(
         )
         coordinates = coord_mapper.calculate_all()
         
-        # 6. OMR Detection
-        logger.info("STEP 4/6: OMR Detection...")
-        omr_results = omr_detector.detect_all_answers(
+        # 6. OMR Detection (ADVANCED!)
+        logger.info("STEP 4/6: OMR Detection (Advanced)...")
+        omr_results = advanced_omr_detector.detect_all_answers(
             processed['processed'],
             coordinates,
             exam_data
