@@ -30,11 +30,11 @@ class Settings:
     # Set to False to use new PDF layout (gridStartY=149mm)
     USE_OLD_PDF_LAYOUT = False  # Changed to False for new PDFs
     
-    # OMR Detection - OPTIMIZED SETTINGS
-    BUBBLE_RADIUS = 12  # Increased from 10 - larger search area for better detection
-    MIN_DARKNESS = 30.0  # Increased from 20 - only detect clearly marked bubbles
-    MIN_DIFFERENCE = 12.0  # Increased from 8 - require clearer difference between marks
-    MULTIPLE_MARKS_THRESHOLD = 10  # Decreased from 15 - more strict multiple mark detection
+    # OMR Detection - BALANCED SETTINGS
+    BUBBLE_RADIUS = 10  # Standard search area
+    MIN_DARKNESS = 35.0  # Higher threshold - only detect clearly filled bubbles
+    MIN_DIFFERENCE = 15.0  # Larger difference required between marks
+    MULTIPLE_MARKS_THRESHOLD = 12  # More lenient - reduce false positives
     
     # CORS
     CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:3000').split(',')
