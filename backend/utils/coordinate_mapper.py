@@ -4,7 +4,12 @@ Maps exact bubble positions from PDF layout to pixel coordinates
 """
 import logging
 from typing import Dict, List
-from ..config import settings
+import sys
+import os
+
+# Add parent directory to path for config import
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config import settings
 
 logger = logging.getLogger(__name__)
 
