@@ -25,11 +25,11 @@ class Settings:
     TARGET_HEIGHT = 1754
     CORNER_MARKER_SIZE = 40
     
-    # OMR Detection - AGGRESSIVE SETTINGS FOR BETTER DETECTION
-    BUBBLE_RADIUS = 10  # Increased from 8 - larger search area
-    MIN_DARKNESS = 20.0  # Lowered from 25 - detect lighter marks
-    MIN_DIFFERENCE = 8.0  # Lowered from 10 - more sensitive
-    MULTIPLE_MARKS_THRESHOLD = 15  # Increased from 10 - reduce false positives
+    # OMR Detection - OPTIMIZED SETTINGS
+    BUBBLE_RADIUS = 12  # Increased from 10 - larger search area for better detection
+    MIN_DARKNESS = 30.0  # Increased from 20 - only detect clearly marked bubbles
+    MIN_DIFFERENCE = 12.0  # Increased from 8 - require clearer difference between marks
+    MULTIPLE_MARKS_THRESHOLD = 10  # Decreased from 15 - more strict multiple mark detection
     
     # CORS
     CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:3000').split(',')

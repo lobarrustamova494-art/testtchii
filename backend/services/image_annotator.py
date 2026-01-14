@@ -21,8 +21,8 @@ class ImageAnnotator:
     COLOR_STUDENT_WRONG = (0, 0, 255)       # Qizil - o'quvchi xato belgilagan
     COLOR_NO_ANSWER = (128, 128, 128)       # Kulrang - javob yo'q
     
-    THICKNESS = 1  # Reduced from 2 to 1 - very thin line
-    PADDING = 1    # Reduced from 3 to 1 - minimal padding, tight fit to bubble
+    THICKNESS = 4  # Thick lines for better visibility
+    PADDING = 2    # Balanced padding - not too tight, not too loose
     
     def __init__(self):
         pass
