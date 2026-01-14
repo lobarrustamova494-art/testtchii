@@ -4,6 +4,7 @@ Maps exact bubble positions from PDF layout to pixel coordinates
 """
 import logging
 from typing import Dict, List
+from ..config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +61,16 @@ class CoordinateMapper:
             self.bubble_spacing_mm = 8
             self.row_height_mm = 5.5  # Updated: 5 → 5.5mm for proper spacing
             self.grid_start_x_mm = 25
-            self.grid_start_y_mm = 149  # Corrected: actual Y where answer grid starts
+            
+            # Use old or new layout based on config
+            if settings.USE_OLD_PDF_LAYOUT:
+                self.grid_start_y_mm = 113  # OLD VALUE for backward compatibility
+                logger.warning(f"⚠️  Using OLD gridStartY={self.grid_start_y_mm}mm (backward compatibility mode)")
+                logger.warning(f"⚠️  Set USE_OLD_PDF_LAYOUT=False in config.py after regenerating PDFs")
+            else:
+                self.grid_start_y_mm = 149  # NEW VALUE (correct)
+                logger.info(f"✅ Using NEW gridStartY={self.grid_start_y_mm}mm")
+            
             self.first_bubble_offset_mm = 8
             
             logger.info(f"Default layout: gridStartY={self.grid_start_y_mm}mm, bubbleRadius={self.bubble_radius_mm}mm, rowHeight={self.row_height_mm}mm")

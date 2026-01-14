@@ -25,6 +25,11 @@ class Settings:
     TARGET_HEIGHT = 1754
     CORNER_MARKER_SIZE = 40
     
+    # Layout Compatibility
+    # Set to True to use old PDF layout (gridStartY=113mm)
+    # Set to False to use new PDF layout (gridStartY=149mm)
+    USE_OLD_PDF_LAYOUT = True  # Change to False after regenerating all PDFs
+    
     # OMR Detection - OPTIMIZED SETTINGS
     BUBBLE_RADIUS = 12  # Increased from 10 - larger search area for better detection
     MIN_DARKNESS = 30.0  # Increased from 20 - only detect clearly marked bubbles
