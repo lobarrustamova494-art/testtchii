@@ -21,13 +21,12 @@ class ImageAnnotator:
     COLOR_STUDENT_WRONG = (0, 0, 255)       # Qizil - o'quvchi xato belgilagan
     COLOR_NO_ANSWER = (128, 128, 128)       # Kulrang - javob yo'q
     
-    THICKNESS = 6  # Very thick lines for maximum visibility
-    PADDING = 3    # Increased padding for better visual separation
+    THICKNESS = 2  # Thinner lines - bubble o'lchamiga mos
+    PADDING = 0    # NO PADDING - bubble o'lchamiga teng
     
-    # OFFSET for alignment correction (temporary fix)
-    # Positive = move right, Negative = move left
-    X_OFFSET = -50  # Move rectangles 50px to the left
-    Y_OFFSET = 0    # No vertical offset needed
+    # NO OFFSET - Coordinates should be accurate from coordinate_mapper
+    X_OFFSET = 0  # No horizontal offset
+    Y_OFFSET = 0  # No vertical offset
     
     def __init__(self):
         pass
@@ -53,11 +52,16 @@ class ImageAnnotator:
         """
         logger.info("Starting image annotation...")
         
-        # Convert grayscale to BGR for colored annotations
+        # CRITICAL: Ensure we have a BGR image for colored annotations
+        # The input image should be grayscale (processed image from OMR detection)
         if len(image.shape) == 2:
+            # Grayscale → BGR
             annotated = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
         else:
+            # Already BGR
             annotated = image.copy()
+        
+        logger.info(f"Annotation image shape: {annotated.shape}, dtype: {annotated.dtype}")
         
         # Annotate each question
         total_annotated = 0
@@ -107,18 +111,25 @@ class ImageAnnotator:
         """
         Bitta savolni annotate qilish
         
-        Yangi mantiq:
-        - YASHIL: To'g'ri javob (har doim)
-        - KO'K: Student to'g'ri belgilagan
-        - QIZIL: Student xato belgilagan
+        YANGI MANTIQ (MINIMAL ANNOTATION):
+        - Faqat KERAKLI bubble'larni annotation qilish
+        - To'g'ri javob: YASHIL
+        - Student to'g'ri belgilagan: KO'K
+        - Student xato belgilagan: QIZIL
+        - Boshqa bubble'lar: annotation qilinmaydi
         """
         bubbles = coords['bubbles']
         
+        # DEBUG: Log first bubble coordinates
+        if coords['questionNumber'] == 1:
+            logger.info(f"Q1 Bubble A coordinates: x={bubbles[0]['x']:.1f}, y={bubbles[0]['y']:.1f}, radius={bubbles[0]['radius']:.1f}")
+            logger.info(f"Q1 Correct answer: {correct_answer}, Student answer: {student_answer}, Is correct: {is_correct}")
+        
         for bubble in bubbles:
             variant = bubble['variant']
-            x = int(round(bubble['x'])) + self.X_OFFSET  # Apply X offset
-            y = int(round(bubble['y'])) + self.Y_OFFSET  # Apply Y offset
-            radius = int(round(bubble['radius']))  # Round to nearest pixel
+            x = int(round(bubble['x'])) + self.X_OFFSET
+            y = int(round(bubble['y'])) + self.Y_OFFSET
+            radius = int(round(bubble['radius']))
             
             # Calculate rectangle coordinates
             x1 = x - radius - self.PADDING
@@ -126,27 +137,46 @@ class ImageAnnotator:
             x2 = x + radius + self.PADDING
             y2 = y + radius + self.PADDING
             
-            # BIRINCHI: To'g'ri javobni YASHIL bilan belgilash (har doim)
-            if variant == correct_answer:
+            # FAQAT KERAKLI BUBBLE'LARNI ANNOTATION QILISH
+            
+            # Case 1: Student to'g'ri javob bergan (to'g'ri javob == student javobi)
+            if variant == correct_answer and variant == student_answer:
+                # KO'K - student to'g'ri belgilagan
+                cv2.rectangle(
+                    image, (x1, y1), (x2, y2),
+                    self.COLOR_STUDENT_CORRECT,
+                    self.THICKNESS
+                )
+            
+            # Case 2: Student xato javob bergan
+            elif variant == student_answer and not is_correct:
+                # QIZIL - student xato belgilagan
+                cv2.rectangle(
+                    image, (x1, y1), (x2, y2),
+                    self.COLOR_STUDENT_WRONG,
+                    self.THICKNESS
+                )
+                # YASHIL - to'g'ri javobni ham ko'rsatish
+                # (agar student xato bergan bo'lsa, to'g'ri javobni ko'rsatish kerak)
+                for b in bubbles:
+                    if b['variant'] == correct_answer:
+                        bx = int(round(b['x'])) + self.X_OFFSET
+                        by = int(round(b['y'])) + self.Y_OFFSET
+                        br = int(round(b['radius']))
+                        cv2.rectangle(
+                            image, 
+                            (bx - br - self.PADDING, by - br - self.PADDING),
+                            (bx + br + self.PADDING, by + br + self.PADDING),
+                            self.COLOR_CORRECT_ANSWER,
+                            self.THICKNESS
+                        )
+                        break
+            
+            # Case 3: Student javob bermagan (student_answer is None)
+            elif student_answer is None and variant == correct_answer:
+                # YASHIL - faqat to'g'ri javobni ko'rsatish
                 cv2.rectangle(
                     image, (x1, y1), (x2, y2),
                     self.COLOR_CORRECT_ANSWER,
                     self.THICKNESS
                 )
-            
-            # IKKINCHI: Student javobini belgilash
-            if variant == student_answer:
-                if is_correct:
-                    # Student to'g'ri belgilagan - KO'K (yashil ustiga)
-                    cv2.rectangle(
-                        image, (x1, y1), (x2, y2),
-                        self.COLOR_STUDENT_CORRECT,
-                        self.THICKNESS
-                    )
-                else:
-                    # Student xato belgilagan - QIZIL
-                    cv2.rectangle(
-                        image, (x1, y1), (x2, y2),
-                        self.COLOR_STUDENT_WRONG,
-                        self.THICKNESS
-                    )

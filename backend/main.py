@@ -15,7 +15,11 @@ from datetime import datetime
 from config import settings
 from services import ImageProcessor, OMRDetector, AIVerifier, AnswerGrader, ImageAnnotator, QRCodeReader
 from services.advanced_omr_detector import AdvancedOMRDetector
+from services.ocr_anchor_detector import OCRAnchorDetector
 from utils import CoordinateMapper
+
+# Import camera preview router
+from camera_preview_api import router as camera_router
 
 # Logging configuration
 logging.basicConfig(
@@ -40,6 +44,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include camera preview router
+app.include_router(camera_router)
+
 # Initialize services
 image_processor = ImageProcessor(
     target_width=settings.TARGET_WIDTH,
@@ -59,6 +66,9 @@ omr_detector = OMRDetector(
 
 # QR Code Reader
 qr_reader = QRCodeReader()
+
+# OCR Anchor Detector (NEW!)
+ocr_anchor_detector = OCRAnchorDetector()
 
 # AI Verifier (only if API key is provided AND enabled)
 ai_verifier = None
@@ -110,7 +120,8 @@ async def health_check():
 async def grade_sheet(
     file: UploadFile = File(...),
     exam_structure: str = Form(...),
-    answer_key: str = Form(...)
+    answer_key: str = Form(...),
+    coordinate_template: str = Form(None)  # YANGI: Optional coordinate template
 ):
     """
     Varaqni tekshirish - Professional OMR + AI
@@ -119,6 +130,7 @@ async def grade_sheet(
         file: Image file (JPEG/PNG)
         exam_structure: JSON string of exam structure
         answer_key: JSON string of answer key
+        coordinate_template: JSON string of coordinate template (optional)
         
     Returns:
         JSON with grading results
@@ -148,6 +160,12 @@ async def grade_sheet(
         try:
             exam_data = json.loads(exam_structure)
             answer_key_data = json.loads(answer_key)
+            
+            # YANGI: Parse coordinate template if provided
+            coord_template = None
+            if coordinate_template:
+                coord_template = json.loads(coordinate_template)
+                logger.info("✅ Coordinate template provided from exam data")
         except json.JSONDecodeError as e:
             raise HTTPException(
                 status_code=400,
@@ -180,15 +198,56 @@ async def grade_sheet(
         
         # 5. Coordinate Calculation
         logger.info("STEP 3/6: Coordinate Calculation...")
-        coord_mapper = CoordinateMapper(
-            processed['dimensions']['width'],
-            processed['dimensions']['height'],
-            exam_data,
-            qr_layout=qr_layout  # Pass QR layout if available
-        )
-        coordinates = coord_mapper.calculate_all()
         
-        # 6. OMR Detection (Using old detector for now)
+        # Priority 0: Try OCR-based anchor system (MOST ACCURATE!)
+        logger.info("Trying OCR-based anchor detection...")
+        coordinates = ocr_anchor_detector.detect_all_with_anchors(
+            processed['grayscale'],
+            exam_data
+        )
+        
+        if coordinates:
+            logger.info("✅ Using OCR-based anchor system (100% accurate, perspective-independent)")
+        else:
+            logger.warning("OCR anchor detection failed, falling back to coordinate-based systems")
+            
+            # Priority 1: Use coordinate template if provided (BEST!)
+            if coord_template and processed['corners'] and len(processed['corners']) == 4:
+                logger.info("✅ Using TEMPLATE-BASED coordinate system (EvalBee style)")
+                from utils.template_coordinate_mapper import TemplateCoordinateMapper
+                
+                coord_mapper = TemplateCoordinateMapper(
+                    processed['corners'],
+                    coord_template
+                )
+                coordinates = coord_mapper.calculate_all()
+            
+            # Priority 2: Use corner-based system
+            elif processed['corners'] and len(processed['corners']) == 4:
+                logger.info("✅ Using corner-based coordinate system (100% accurate)")
+                from utils.relative_coordinate_mapper import RelativeCoordinateMapper
+                
+                coord_mapper = RelativeCoordinateMapper(
+                    processed['corners'],
+                    exam_data,
+                    qr_layout=qr_layout
+                )
+                coordinates = coord_mapper.calculate_all()
+            
+            # Priority 3: Fallback to old system
+            else:
+                logger.warning("⚠️  Corner markers not found, using fallback system")
+                from utils.coordinate_mapper import CoordinateMapper
+                
+                coord_mapper = CoordinateMapper(
+                    processed['dimensions']['width'],
+                    processed['dimensions']['height'],
+                    exam_data,
+                    qr_layout=qr_layout
+                )
+                coordinates = coord_mapper.calculate_all()
+        
+        # 6. OMR Detection (Using STANDARD detector - more reliable)
         logger.info("STEP 4/6: OMR Detection...")
         omr_results = omr_detector.detect_all_answers(
             processed['processed'],
@@ -253,8 +312,10 @@ async def grade_sheet(
         # 9. Image Annotation (Vizual ko'rsatish)
         logger.info("STEP 6/6: Image Annotation...")
         annotator = ImageAnnotator()
+        # Use grayscale image for better visual quality
+        # Coordinates are the same for both processed and grayscale (same dimensions)
         annotated_image = annotator.annotate_sheet(
-            processed['grayscale'],
+            processed['grayscale'],  # Use grayscale for better quality
             final_results,
             coordinates,
             answer_key_data

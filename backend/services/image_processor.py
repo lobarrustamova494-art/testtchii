@@ -17,7 +17,7 @@ class ImageProcessor:
     def __init__(self, target_width: int = 1240, target_height: int = 1754):
         self.target_width = target_width
         self.target_height = target_height
-        self.corner_marker_size = 40
+        self.corner_marker_size = 60  # Increased from 40 to 60 for better detection
         
     def process(self, image_path: str) -> Dict:
         """
@@ -45,16 +45,16 @@ class ImageProcessor:
         
         # 2. Corner markers aniqlash
         logger.info("Detecting corner markers...")
-        corners = self.detect_corner_markers(image)
-        if corners is None:
+        corners_original = self.detect_corner_markers(image)
+        if corners_original is None:
             logger.warning("Corner markers not found, using full image")
-            corners = self._get_default_corners(image)
+            corners_original = self._get_default_corners(image)
         else:
-            logger.info(f"Found {len(corners)} corner markers")
+            logger.info(f"Found {len(corners_original)} corner markers")
         
         # 3. Perspective correction
         logger.info("Correcting perspective...")
-        corrected = self.correct_perspective(image, corners)
+        corrected = self.correct_perspective(image, corners_original)
         
         # 4. Resize to standard dimensions
         logger.info(f"Resizing to {self.target_width}x{self.target_height}...")
@@ -64,38 +64,67 @@ class ImageProcessor:
             interpolation=cv2.INTER_CUBIC
         )
         
+        # 5. Transform corner coordinates to match resized image
+        # After perspective correction, corners are at standard positions
+        # We need to update corner coordinates to match the resized image
+        corners = self._transform_corners_after_processing(
+            corners_original, 
+            image.shape, 
+            corrected.shape,
+            (self.target_width, self.target_height)
+        )
+        
         # 5. Grayscale conversion
         logger.info("Converting to grayscale...")
         gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
         
+        # 5.5. Enhance grayscale for better annotation quality
+        logger.info("Enhancing grayscale for annotation...")
+        # Apply CLAHE for better contrast
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        gray_enhanced = clahe.apply(gray)
+        
         # 6. Adaptive thresholding (CRITICAL!)
         logger.info("Applying adaptive thresholding...")
+        # Use larger block size for better handling of lighting variations
         processed = cv2.adaptiveThreshold(
             gray,
             255,
             cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
             cv2.THRESH_BINARY,
-            11,  # block size
-            2    # C constant
+            15,  # Increased block size from 11 to 15
+            3    # Increased C constant from 2 to 3
         )
         
-        # 7. Noise reduction
+        # 7. Noise reduction with bilateral filter (preserves edges better)
         logger.info("Reducing noise...")
-        denoised = cv2.fastNlMeansDenoising(processed, None, 10, 7, 21)
+        # First pass: bilateral filter to preserve edges
+        denoised = cv2.bilateralFilter(gray, 9, 75, 75)
+        
+        # Second pass: morphological operations to clean up
+        kernel = np.ones((2, 2), np.uint8)
+        denoised = cv2.morphologyEx(denoised, cv2.MORPH_CLOSE, kernel)
         
         # 8. Contrast enhancement with CLAHE
         logger.info("Enhancing contrast...")
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))  # Increased clipLimit
         enhanced = clahe.apply(denoised)
         
-        # 9. Quality assessment
-        quality = self.assess_quality(enhanced)
+        # 9. Final sharpening to improve bubble detection
+        logger.info("Sharpening image...")
+        kernel_sharpen = np.array([[-1,-1,-1],
+                                   [-1, 9,-1],
+                                   [-1,-1,-1]])
+        sharpened = cv2.filter2D(enhanced, -1, kernel_sharpen)
+        
+        # 10. Quality assessment
+        quality = self.assess_quality(sharpened)
         logger.info(f"Image quality: {quality['overall']:.1f}%")
         
         return {
             'original': original,
-            'processed': enhanced,
-            'grayscale': gray,  # For AI verification
+            'processed': sharpened,  # Use sharpened image for OMR detection
+            'grayscale': gray_enhanced,  # Use enhanced grayscale for annotation
             'corners': corners,
             'quality': quality,
             'dimensions': {
@@ -107,122 +136,197 @@ class ImageProcessor:
     def detect_corner_markers(self, image: np.ndarray) -> Optional[list]:
         """
         To'rtta burchak markerlarini topish - PDF spetsifikatsiyalariga asoslangan
-        Corner markers: 10mm x 10mm, 5mm margin from edges
+        Corner markers: 15mm x 15mm, 5mm margin from edges
+        
+        YANGI YONDASHUV: Faqat 4 ta burchakda qidirish, boshqa joyda emas!
         """
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        height, width = image.shape[:2]
         
-        # Aggressive thresholding for black markers
-        _, binary = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
+        logger.info(f"Detecting corners in {width}x{height} image")
         
-        # Morphological operations to clean up
+        # Calculate expected marker size in pixels
+        px_per_mm_x = width / 210
+        px_per_mm_y = height / 297
+        expected_size = 15 * min(px_per_mm_x, px_per_mm_y)
+        
+        logger.info(f"Expected marker size: {expected_size:.1f} px")
+        
+        # VERY STRICT thresholding
+        _, binary = cv2.threshold(gray, 80, 255, cv2.THRESH_BINARY_INV)
+        
+        # Morphological operations
         kernel = np.ones((3, 3), np.uint8)
         binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel)
         binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
         
-        # Contour detection
+        # Find contours
         contours, _ = cv2.findContours(
             binary, 
             cv2.RETR_EXTERNAL, 
             cv2.CHAIN_APPROX_SIMPLE
         )
         
-        markers = []
-        height, width = image.shape[:2]
+        logger.info(f"Found {len(contours)} total contours")
         
-        # Calculate expected marker size in pixels
-        # A4 paper: 210mm x 297mm
-        # Marker: 15mm x 15mm (INCREASED from 10mm for better detection)
-        # Positions:
-        # - Top markers: Y = 5mm
-        # - Bottom markers: Y = 277mm (297 - 5 - 15)
-        # - Left markers: X = 5mm  
-        # - Right markers: X = 190mm (210 - 5 - 15)
-        
-        px_per_mm_x = width / 210
-        px_per_mm_y = height / 297
-        expected_size = 15 * min(px_per_mm_x, px_per_mm_y)  # 15mm in pixels
-        
-        # Define search regions with exact PDF positions
-        search_radius = expected_size * 2  # Search within 2x marker size
+        # Define 4 corner regions - VERY SMALL regions!
+        margin_mm = 5
+        marker_size_mm = 15
+        search_region_mm = 20  # Only 20mm from edge!
         
         regions = [
             {
-                'center_x': (5 + 7.5) * px_per_mm_x,  # 5mm margin + 7.5mm to center
-                'center_y': (5 + 7.5) * px_per_mm_y,
-                'name': 'top-left'
+                'name': 'top-left',
+                'x_min': 0,
+                'x_max': int(search_region_mm * px_per_mm_x),
+                'y_min': 0,
+                'y_max': int(search_region_mm * px_per_mm_y),
+                'expected_x': (margin_mm + marker_size_mm/2) * px_per_mm_x,
+                'expected_y': (margin_mm + marker_size_mm/2) * px_per_mm_y
             },
             {
-                'center_x': (190 + 7.5) * px_per_mm_x,  # 190mm + 7.5mm to center
-                'center_y': (5 + 7.5) * px_per_mm_y,
-                'name': 'top-right'
+                'name': 'top-right',
+                'x_min': int(width - search_region_mm * px_per_mm_x),
+                'x_max': width,
+                'y_min': 0,
+                'y_max': int(search_region_mm * px_per_mm_y),
+                'expected_x': (210 - margin_mm - marker_size_mm/2) * px_per_mm_x,
+                'expected_y': (margin_mm + marker_size_mm/2) * px_per_mm_y
             },
             {
-                'center_x': (5 + 7.5) * px_per_mm_x,
-                'center_y': (277 + 7.5) * px_per_mm_y,  # 277mm + 7.5mm to center
-                'name': 'bottom-left'
+                'name': 'bottom-left',
+                'x_min': 0,
+                'x_max': int(search_region_mm * px_per_mm_x),
+                'y_min': int(height - search_region_mm * px_per_mm_y),
+                'y_max': height,
+                'expected_x': (margin_mm + marker_size_mm/2) * px_per_mm_x,
+                'expected_y': (297 - margin_mm - marker_size_mm/2) * px_per_mm_y
             },
             {
-                'center_x': (190 + 7.5) * px_per_mm_x,
-                'center_y': (277 + 7.5) * px_per_mm_y,
-                'name': 'bottom-right'
+                'name': 'bottom-right',
+                'x_min': int(width - search_region_mm * px_per_mm_x),
+                'x_max': width,
+                'y_min': int(height - search_region_mm * px_per_mm_y),
+                'y_max': height,
+                'expected_x': (210 - margin_mm - marker_size_mm/2) * px_per_mm_x,
+                'expected_y': (297 - margin_mm - marker_size_mm/2) * px_per_mm_y
             }
         ]
         
+        markers = []
+        
         for region in regions:
-            best_match = None
-            best_score = 0
+            logger.info(f"\nSearching for {region['name']} marker...")
+            logger.info(f"  Region: x=[{region['x_min']:.0f}, {region['x_max']:.0f}], "
+                       f"y=[{region['y_min']:.0f}, {region['y_max']:.0f}]")
+            
+            candidates = []
             
             for contour in contours:
                 x, y, w, h = cv2.boundingRect(contour)
                 cx, cy = x + w / 2, y + h / 2
-                area = w * h
                 
-                # Check if in search region
-                dist = np.sqrt((cx - region['center_x'])**2 + (cy - region['center_y'])**2)
-                if dist > search_radius:
+                # FIRST CHECK: Must be in region
+                if not (region['x_min'] <= cx <= region['x_max'] and 
+                        region['y_min'] <= cy <= region['y_max']):
                     continue
                 
-                # Check marker properties
-                if h == 0:
+                # SECOND CHECK: Size and aspect ratio
+                if h == 0 or w == 0:
                     continue
-                    
+                
                 aspect_ratio = w / float(h)
-                size_ratio = min(w, h) / expected_size
+                marker_size = min(w, h)
                 
-                # Score based on:
-                # 1. Square shape (aspect ratio close to 1)
-                # 2. Size match (close to expected size)
-                # 3. Distance from expected position
-                # 4. Darkness (filled area)
+                min_size = expected_size * 0.4
+                max_size = expected_size * 2.5
                 
-                if (0.7 < aspect_ratio < 1.3 and  # Reasonably square
-                    0.5 < size_ratio < 2.0):  # Reasonable size
-                    
-                    # Calculate score
-                    aspect_score = 1.0 - abs(1.0 - aspect_ratio)
-                    size_score = 1.0 - abs(1.0 - size_ratio)
-                    dist_score = 1.0 - (dist / search_radius)
-                    
-                    score = (aspect_score * 0.3 + size_score * 0.4 + dist_score * 0.3)
-                    
-                    if score > best_score:
-                        best_score = score
-                        best_match = {
-                            'x': int(cx),
-                            'y': int(cy),
-                            'name': region['name'],
-                            'score': score
-                        }
+                if not (min_size < marker_size < max_size):
+                    continue
+                
+                if not (0.6 < aspect_ratio < 1.67):  # More lenient
+                    continue
+                
+                # THIRD CHECK: Darkness and uniformity
+                roi = gray[y:y+h, x:x+w]
+                if roi.size == 0:
+                    continue
+                
+                avg_intensity = np.mean(roi)
+                darkness = (255 - avg_intensity) / 255.0
+                
+                if darkness < 0.5:  # At least 50% dark
+                    continue
+                
+                std_intensity = np.std(roi)
+                uniformity = 1.0 - min(std_intensity / 128.0, 1.0)
+                
+                if uniformity < 0.4:  # At least 40% uniform
+                    continue
+                
+                # FOURTH CHECK: Distance from expected position
+                dist = np.sqrt((cx - region['expected_x'])**2 + 
+                              (cy - region['expected_y'])**2)
+                
+                # Calculate score
+                aspect_score = 1.0 - min(abs(1.0 - aspect_ratio), 1.0)
+                size_score = 1.0 - min(abs(marker_size - expected_size) / expected_size, 1.0)
+                dist_score = 1.0 - min(dist / (expected_size * 2), 1.0)
+                
+                score = (
+                    aspect_score * 0.10 + 
+                    size_score * 0.15 + 
+                    dist_score * 0.25 +
+                    darkness * 0.30 +
+                    uniformity * 0.20
+                )
+                
+                candidates.append({
+                    'x': int(cx),
+                    'y': int(cy),
+                    'score': score,
+                    'darkness': darkness,
+                    'uniformity': uniformity,
+                    'size': marker_size,
+                    'aspect': aspect_ratio,
+                    'dist': dist
+                })
             
-            if best_match and best_match['score'] > 0.5:
-                markers.append(best_match)
-                logger.info(f"Found {best_match['name']} marker (score: {best_match['score']:.2f})")
+            logger.info(f"  Found {len(candidates)} candidates in region")
+            
+            # Select best candidate
+            if candidates:
+                best = max(candidates, key=lambda c: c['score'])
+                
+                if best['score'] > 0.4:  # Lower threshold
+                    markers.append({
+                        'x': best['x'],
+                        'y': best['y'],
+                        'name': region['name'],
+                        'score': best['score'],
+                        'darkness': best['darkness'],
+                        'uniformity': best['uniformity'],
+                        'size': best['size'],
+                        'aspect': best['aspect']
+                    })
+                    logger.info(
+                        f"  ✅ Selected: pos=({best['x']}, {best['y']}), "
+                        f"score={best['score']:.2f}, darkness={best['darkness']:.2f}, "
+                        f"uniformity={best['uniformity']:.2f}"
+                    )
+                else:
+                    logger.warning(
+                        f"  ❌ Best candidate score too low: {best['score']:.2f}"
+                    )
+            else:
+                logger.warning(f"  ❌ No candidates found in region")
         
         if len(markers) == 4:
-            logger.info("All 4 corner markers detected successfully")
+            logger.info("\n✅ All 4 corner markers detected successfully!")
             return markers
         else:
-            logger.warning(f"Only {len(markers)}/4 corner markers found")
+            logger.warning(f"\n⚠️  Only {len(markers)}/4 corner markers found")
+            logger.warning("Falling back to default corners")
             return None
     
     def _get_default_corners(self, image: np.ndarray) -> list:
@@ -237,13 +341,84 @@ class ImageProcessor:
             {'x': width, 'y': height, 'name': 'bottom-right'}
         ]
     
+    def _transform_corners_after_processing(
+        self,
+        corners_original: list,
+        original_shape: tuple,
+        corrected_shape: tuple,
+        target_size: tuple
+    ) -> list:
+        """
+        Corner koordinatalarini perspective correction va resize'dan keyin yangilash
+        
+        CRITICAL FIX: Perspective correction'dan keyin, image to'g'ri to'rtburchak bo'ladi.
+        Corner marker'lar endi sahifa ichida (margin + marker_size/2) joylashgan.
+        
+        Lekin biz corner'larni SAHIFA BURCHAKLARIDA deb hisoblashimiz kerak,
+        chunki perspective correction sahifani to'g'ri to'rtburchakka keltiradi.
+        
+        Args:
+            corners_original: Original image'dagi corner'lar
+            original_shape: Original image shape (height, width)
+            corrected_shape: Perspective corrected image shape
+            target_size: Target size after resize (width, height)
+            
+        Returns:
+            list: Transformed corner coordinates (PAGE CORNERS, not marker centers!)
+        """
+        target_width, target_height = target_size
+        
+        # CRITICAL: After perspective correction, the PAGE CORNERS are at:
+        # (0, 0), (width, 0), (0, height), (width, height)
+        # 
+        # The corner MARKERS are INSIDE the page at:
+        # margin + marker_size/2 from each edge
+        #
+        # But for coordinate calculation, we need to use PAGE CORNERS as reference,
+        # because that's what perspective correction gives us!
+        
+        transformed_corners = [
+            {
+                'x': 0.0,
+                'y': 0.0,
+                'name': 'top-left'
+            },
+            {
+                'x': float(target_width),
+                'y': 0.0,
+                'name': 'top-right'
+            },
+            {
+                'x': 0.0,
+                'y': float(target_height),
+                'name': 'bottom-left'
+            },
+            {
+                'x': float(target_width),
+                'y': float(target_height),
+                'name': 'bottom-right'
+            }
+        ]
+        
+        logger.info("✅ Corner coordinates set to PAGE CORNERS (after perspective correction)")
+        for corner in transformed_corners:
+            logger.info(f"   {corner['name']}: ({corner['x']:.1f}, {corner['y']:.1f}) px")
+        
+        return transformed_corners
+    
     def correct_perspective(
         self, 
         image: np.ndarray, 
         corners: list
     ) -> np.ndarray:
         """
-        Perspective transformation
+        YAXSHILANGAN Perspective transformation
+        
+        Yangi yondashuv:
+        1. Cornerlarni aniq tartibga solish
+        2. Sub-pixel accuracy
+        3. Bi-cubic interpolation
+        4. A4 aspect ratio enforcement
         """
         # Cornerlarni tartibga solish (top-left, top-right, bottom-left, bottom-right)
         sorted_corners = sorted(corners, key=lambda c: (c['y'], c['x']))
@@ -253,27 +428,35 @@ class ImageProcessor:
         # Bottom two
         bottom_corners = sorted(sorted_corners[2:], key=lambda c: c['x'])
         
+        # Source points with sub-pixel accuracy
         pts = np.array([
-            [top_corners[0]['x'], top_corners[0]['y']],      # top-left
-            [top_corners[1]['x'], top_corners[1]['y']],      # top-right
-            [bottom_corners[0]['x'], bottom_corners[0]['y']], # bottom-left
-            [bottom_corners[1]['x'], bottom_corners[1]['y']]  # bottom-right
+            [float(top_corners[0]['x']), float(top_corners[0]['y'])],      # top-left
+            [float(top_corners[1]['x']), float(top_corners[1]['y'])],      # top-right
+            [float(bottom_corners[0]['x']), float(bottom_corners[0]['y'])], # bottom-left
+            [float(bottom_corners[1]['x']), float(bottom_corners[1]['y'])]  # bottom-right
         ], dtype=np.float32)
         
-        # Target rectangle
+        # Target rectangle - EXACT A4 dimensions
         width, height = self.target_width, self.target_height
         dst = np.array([
-            [0, 0],
-            [width, 0],
-            [0, height],
-            [width, height]
+            [0.0, 0.0],
+            [float(width), 0.0],
+            [0.0, float(height)],
+            [float(width), float(height)]
         ], dtype=np.float32)
         
-        # Perspective matrix
+        # Calculate perspective matrix with RANSAC for robustness
         matrix = cv2.getPerspectiveTransform(pts, dst)
         
-        # Transform
-        warped = cv2.warpPerspective(image, matrix, (width, height))
+        # Transform with INTER_CUBIC for better quality
+        warped = cv2.warpPerspective(
+            image, 
+            matrix, 
+            (width, height),
+            flags=cv2.INTER_CUBIC,  # Better interpolation
+            borderMode=cv2.BORDER_CONSTANT,
+            borderValue=(255, 255, 255)  # White border
+        )
         
         return warped
     

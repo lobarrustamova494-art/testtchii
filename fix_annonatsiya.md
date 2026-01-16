@@ -608,7 +608,7 @@ async def grade_sheet_v2(
                 omr_results,
                 coordinates
             )
-        else:
+        else: 
             verified = omr_results
         
         # Grading

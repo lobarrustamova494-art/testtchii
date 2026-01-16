@@ -17,6 +17,9 @@ scipy==1.11.4
 # QR Code Detection
 pyzbar==0.1.9
 
+# OCR
+pytesseract==0.3.10
+
 # AI
 groq>=0.11.0
 

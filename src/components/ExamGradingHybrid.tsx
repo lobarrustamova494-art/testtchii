@@ -5,6 +5,7 @@
 import {
 	AlertTriangle,
 	ArrowLeft,
+	Camera,
 	CheckCircle,
 	Cloud,
 	CloudOff,
@@ -27,6 +28,7 @@ import {
 } from '../services/backendApi'
 import { Exam, Toast as ToastType } from '../types'
 import { getAllAnswerKeys } from '../utils/storage'
+import CameraCaptureNew from './CameraCaptureNew'
 import Toast from './Toast'
 
 interface ExamGradingProps {
@@ -59,6 +61,7 @@ const ExamGradingHybrid: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 		'checking' | 'available' | 'unavailable'
 	>('checking')
 	const [useBackend, setUseBackend] = useState(true)
+	const [showCamera, setShowCamera] = useState(false)
 	const fileInputRef = useRef<HTMLInputElement>(null)
 
 	// Get answer keys
@@ -146,6 +149,7 @@ const ExamGradingHybrid: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 				file: sheet.file,
 				examStructure: exam,
 				answerKey: answerKey,
+				coordinateTemplate: exam.coordinateTemplate, // YANGI: Send coordinate template
 			})
 
 			console.log('✅ Backend processing complete:', response)
@@ -184,19 +188,27 @@ const ExamGradingHybrid: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 		setProcessing(true)
 
 		try {
+			// Check if answer keys exist
+			if (answerKeys.length === 0) {
+				setToast({
+					message: 'Avval javob kalitlarini belgilang!',
+					type: 'error',
+				})
+				setProcessing(false)
+				return
+			}
+
 			if (useBackend && backendStatus === 'available') {
 				await processSheetWithBackend(sheet)
 			} else {
 				// Fallback to frontend processing
 				setToast({
-					message: 'Backend mavjud emas. Frontend OMR ishlatilmoqda...',
-					type: 'warning',
+					message: "Backend mavjud emas. Iltimos, backend'ni ishga tushiring.",
+					type: 'error',
 				})
-				// Here you would call the old frontend processing
-				// For now, just show a message
-				throw new Error('Frontend fallback not implemented yet')
 			}
 		} catch (error) {
+			console.error('Processing error:', error)
 			setToast({
 				message: `Xatolik: ${
 					error instanceof Error ? error.message : "Noma'lum xatolik"
@@ -210,6 +222,37 @@ const ExamGradingHybrid: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 
 	const removeSheet = (id: string) => {
 		setUploadedSheets(prev => prev.filter(sheet => sheet.id !== id))
+	}
+
+	const openCamera = () => {
+		setShowCamera(true)
+	}
+
+	const handleCameraCapture = (imageFile: File) => {
+		// Convert File to data URL
+		const reader = new FileReader()
+		reader.onload = e => {
+			const result = e.target?.result as string
+			const sheet: UploadedSheet = {
+				id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+				name: imageFile.name,
+				preview: result,
+				file: imageFile,
+				processed: false,
+			}
+			setUploadedSheets(prev => [...prev, sheet])
+			setShowCamera(false)
+
+			setToast({
+				message: 'Rasm muvaffaqiyatli olindi!',
+				type: 'success',
+			})
+		}
+		reader.readAsDataURL(imageFile)
+	}
+
+	const closeCamera = () => {
+		setShowCamera(false)
 	}
 
 	const handleDrop = useCallback((event: React.DragEvent) => {
@@ -283,6 +326,15 @@ const ExamGradingHybrid: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 			</header>
 
 			<main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
+				{/* Camera Capture Component */}
+				{showCamera && (
+					<CameraCaptureNew
+						onCapture={handleCameraCapture}
+						onClose={closeCamera}
+						examStructure={exam}
+					/>
+				)}
+
 				{/* System Status Panel */}
 				<div className='bg-white rounded-xl border p-6 mb-8'>
 					<div className='flex items-center justify-between mb-4'>
@@ -437,6 +489,11 @@ const ExamGradingHybrid: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 										onChange={handleFileSelect}
 									/>
 								</label>
+
+								<button onClick={openCamera} className='btn-secondary'>
+									<Camera className='w-5 h-5' />
+									Kamera
+								</button>
 							</div>
 						</div>
 					</div>

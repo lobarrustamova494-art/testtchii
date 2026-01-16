@@ -76,7 +76,7 @@ class CoordinateMapper:
                 self.grid_start_y_mm = 149  # NEW VALUE (correct)
                 logger.info(f"✅ Using NEW gridStartY={self.grid_start_y_mm}mm")
             
-            self.first_bubble_offset_mm = 8
+            self.first_bubble_offset_mm = 8  # RESTORED: Must match PDF generator (xPos + 8)
             
             logger.info(f"Default layout: gridStartY={self.grid_start_y_mm}mm, bubbleRadius={self.bubble_radius_mm}mm, rowHeight={self.row_height_mm}mm")
         

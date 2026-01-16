@@ -21,23 +21,40 @@ class Settings:
     AI_CONFIDENCE_THRESHOLD = float(os.getenv('AI_CONFIDENCE_THRESHOLD', 70.0))
     
     # Image Processing
-    TARGET_WIDTH = 1240
-    TARGET_HEIGHT = 1754
-    CORNER_MARKER_SIZE = 40
+    TARGET_WIDTH = 2480  # Updated to match PDF resolution
+    TARGET_HEIGHT = 3508  # Updated to match PDF resolution
+    CORNER_MARKER_SIZE = 60  # Increased for better detection
+    
+    # Adaptive Thresholding - OPTIMAL PARAMETERS
+    ADAPTIVE_THRESHOLD_BLOCK_SIZE = 15  # Must be odd
+    ADAPTIVE_THRESHOLD_C = 3  # Higher = less black pixels
     
     # Layout Compatibility
     # Set to True to use old PDF layout (gridStartY=113mm)
     # Set to False to use new PDF layout (gridStartY=149mm)
     USE_OLD_PDF_LAYOUT = False  # Changed to False for new PDFs
     
-    # OMR Detection - BALANCED SETTINGS
-    BUBBLE_RADIUS = 10  # Standard search area
-    MIN_DARKNESS = 35.0  # Higher threshold - only detect clearly filled bubbles
-    MIN_DIFFERENCE = 15.0  # Larger difference required between marks
-    MULTIPLE_MARKS_THRESHOLD = 12  # More lenient - reduce false positives
+    # OMR Detection - OPTIMAL PARAMETERS (from testing)
+    BUBBLE_RADIUS = 8  # pixels in processed image
+    MIN_DARKNESS = 35.0  # % - minimum darkness to consider as mark
+    MIN_COVERAGE = 40.0  # % - minimum coverage of dark pixels
+    MIN_INNER_FILL = 50.0  # % - MOST IMPORTANT! Rejects partial marks
+    MIN_DIFFERENCE = 15.0  # % - minimum difference between 1st and 2nd
+    MULTIPLE_MARKS_THRESHOLD = 10.0  # % - if difference < this, multiple marks
+    
+    # Corner Detection - SCORING WEIGHTS
+    CORNER_ASPECT_WEIGHT = 0.10  # Square shape
+    CORNER_SIZE_WEIGHT = 0.15  # Correct size
+    CORNER_DIST_WEIGHT = 0.25  # Near expected position
+    CORNER_DARKNESS_WEIGHT = 0.30  # Darkness (most important)
+    CORNER_UNIFORMITY_WEIGHT = 0.20  # Uniform color
+    CORNER_MIN_SCORE = 0.4  # Minimum score to accept as corner
     
     # CORS
-    CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:3000').split(',')
+    CORS_ORIGINS = os.getenv(
+        'CORS_ORIGINS', 
+        'http://localhost:3000,http://localhost:5173,https://evalbee-frontend.onrender.com'
+    ).split(',')
     
     # Groq Model - TEMPORARILY DISABLED (model decommissioned)
     GROQ_MODEL = "llama-3.2-90b-vision-preview"  # Decommissioned

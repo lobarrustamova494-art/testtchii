@@ -9,6 +9,7 @@ export interface BackendGradingRequest {
 	file: File
 	examStructure: any
 	answerKey: { [questionNumber: number]: string }
+	coordinateTemplate?: any // YANGI: Optional coordinate template
 }
 
 export interface BackendGradingResponse {
@@ -128,6 +129,15 @@ export class BackendApiService {
 		formData.append('file', request.file)
 		formData.append('exam_structure', JSON.stringify(request.examStructure))
 		formData.append('answer_key', JSON.stringify(request.answerKey))
+
+		// YANGI: Add coordinate template if provided
+		if (request.coordinateTemplate) {
+			formData.append(
+				'coordinate_template',
+				JSON.stringify(request.coordinateTemplate)
+			)
+			console.log('✅ Sending coordinate template to backend')
+		}
 
 		try {
 			const response = await fetch(`${this.baseUrl}/api/grade-sheet`, {

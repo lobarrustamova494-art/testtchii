@@ -1,0 +1,611 @@
+================================================================================
+                    PROFESSIONAL OMR GRADING SYSTEM
+                         To'liq Texnik Dokumentatsiya
+================================================================================
+
+LOYIHA HAQIDA
+=============
+
+Nom: Professional OMR (Optical Mark Recognition) Grading System
+Versiya: 3.0
+Maqsad: Test varaqlarini avtomatik tekshirish tizimi
+Texnologiya: React (Frontend) + FastAPI (Backend) + OpenCV + AI
+
+================================================================================
+ARXITEKTURA
+================================================================================
+
+UMUMIY TUZILMA:
+---------------
+
+┌─────────────────────────────────────────────────────────────────┐
+│                         FRONTEND (React)                         │
+│  - Imtihon yaratish (ExamCreation.tsx)                          │
+│  - PDF generatsiya (pdfGenerator.ts)                            │
+│  - Javob kalitlari (AnswerKeyManager.tsx)                       │
+│  - Tekshirish (ExamGradingHybrid.tsx)                           │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓ HTTP API
+┌─────────────────────────────────────────────────────────────────┐
+│                        BACKEND (FastAPI)                         │
+│  - Image Processing (OpenCV)                                     │
+│  - OMR Detection (omr_detector.py)                              │
+│  - Coordinate Calculation (coordinate_mapper.py)                │
+│  - Grading (grader.py)                                          │
+│  - Annotation (image_annotator.py)                              │
+└─────────────────────────────────────────────────────────────────┘
+
+================================================================================
+FAYL TUZILMASI
+================================================================================
+
+PROJECT ROOT/
+│
+├── backend/                          # Python Backend
+│   ├── main.py                       # FastAPI server (ASOSIY)
+│   ├── config.py                     # Konfiguratsiya
+│   ├── requirements.txt              # Python dependencies
+│   │
+│   ├── services/                     # Asosiy xizmatlar
+│   │   ├── __init__.py
+│   │   ├── image_processor.py        # Rasm qayta ishlash (OpenCV)
+│   │   ├── omr_detector.py           # OMR detection (MUHIM!)
+│   │   ├── advanced_omr_detector.py  # Advanced OMR
+│   │   ├── ocr_anchor_detector.py    # OCR-based detection
+│   │   ├── grader.py                 # Baholash tizimi
+│   │   ├── image_annotator.py        # Vizual annotation (MUHIM!)
+│   │   ├── qr_reader.py              # QR code o'qish
+│   │   └── ai_verifier.py            # AI verification (Groq)
+│   │
+│   └── utils/                        # Yordamchi funksiyalar
+│       ├── coordinate_mapper.py      # Koordinata hisoblash (ASOSIY)
+│       ├── relative_coordinate_mapper.py  # Corner-based
+│       └── template_coordinate_mapper.py  # Template-based
+│
+├── src/                              # React Frontend
+│   ├── main.tsx                      # Entry point
+│   ├── App.tsx                       # Main app
+│   │
+│   ├── components/                   # React komponentlar
+│   │   ├── Dashboard.tsx             # Bosh sahifa
+│   │   ├── ExamCreation.tsx          # Imtihon yaratish
+│   │   ├── ExamPreview.tsx           # PDF preview
+│   │   ├── AnswerKeyManager.tsx      # Javob kalitlari
+│   │   └── ExamGradingHybrid.tsx     # Tekshirish (ASOSIY)
+│   │
+│   ├── utils/                        # Yordamchi funksiyalar
+│   │   ├── pdfGenerator.ts           # PDF yaratish (MUHIM!)
+│   │   ├── coordinateTemplateGenerator.ts  # Koordinata template
+│   │   └── storage.ts                # LocalStorage
+│   │
+│   ├── services/
+│   │   └── backendApi.ts             # Backend API client
+│   │
+│   └── types/
+│       └── index.ts                  # TypeScript types
+│
+├── index.html                        # HTML entry
+├── package.json                      # Node.js dependencies
+├── vite.config.ts                    # Vite config
+└── tailwind.config.js                # Tailwind CSS config
+
+================================================================================
+ASOSIY JARAYONLAR
+================================================================================
+
+1. IMTIHON YARATISH (PDF GENERATSIYA)
+======================================
+
+Fayl: src/utils/pdfGenerator.ts
+
+Jarayon:
+--------
+1. Foydalanuvchi imtihon tuzilmasini kiritadi:
+   - Mavzular (subjects)
+   - Bo'limlar (sections)
+   - Savollar soni (questionCount)
+
+2. PDF yaratiladi (jsPDF):
+   - A4 format (210mm x 297mm)
+   - Corner markers (4 ta qora kvadrat, 15mm x 15mm)
+   - QR code (layout ma'lumotlari bilan)
+   - Savol raqamlari (1., 2., 3., ...)
+   - Bubble'lar (A, B, C, D, E)
+
+3. Layout parametrlari:
+   - gridStartX: 25mm
+   - gridStartY: 149mm
+   - bubbleRadius: 2.5mm
+   - bubbleSpacing: 8mm
+   - firstBubbleOffset: 8mm (raqamdan birinchi bubble'gacha)
+   - rowHeight: 5.5mm
+   - questionsPerRow: 2
+
+4. QR code yaratiladi:
+   - Layout parametrlari
+   - Imtihon tuzilmasi
+   - Timestamp
+   - Version
+
+5. Coordinate template yaratiladi:
+   - Har bubble uchun nisbiy koordinatalar (0-1)
+   - Corner marker'larga nisbatan
+
+Natija: PDF fayl (masalan: Matematika_ToplamA_2026-01-15.pdf)
+
+================================================================================
+
+2. RASM QAYTA ISHLASH (IMAGE PROCESSING)
+=========================================
+
+Fayl: backend/services/image_processor.py
+
+Jarayon:
+--------
+1. Rasm yuklanadi (JPEG/PNG)
+
+2. Corner marker'lar topiladi:
+   - 4 ta qora kvadrat (15mm x 15mm)
+   - Burchaklarda (5mm margin)
+   - Contour detection (OpenCV)
+   - Score-based selection
+
+3. Perspective correction:
+   - 4 ta corner'dan transformation matrix
+   - Warp perspective
+   - A4 format'ga keltirish
+
+4. Resize:
+   - Target: 1240x1754 px (A4 aspect ratio)
+   - INTER_CUBIC interpolation
+
+5. Grayscale conversion:
+   - BGR → Grayscale
+   - CLAHE enhancement (kontrast yaxshilash)
+
+6. Processing for OMR:
+   - Adaptive thresholding
+   - Bilateral filter (noise reduction)
+   - Morphological operations
+   - Sharpening
+
+Natija:
+-------
+{
+    'original': original_image,
+    'processed': sharpened_image,      # OMR detection uchun
+    'grayscale': enhanced_grayscale,   # Annotation uchun
+    'corners': [4 ta corner],
+    'quality': quality_metrics,
+    'dimensions': {'width': 1240, 'height': 1754}
+}
+
+================================================================================
+
+3. KOORDINATA HISOBLASH (COORDINATE CALCULATION)
+=================================================
+
+3 xil tizim mavjud (priority tartibida):
+
+A) OCR-BASED ANCHOR SYSTEM (Priority 0)
+----------------------------------------
+Fayl: backend/services/ocr_anchor_detector.py
+
+Jarayon:
+1. Tesseract OCR bilan savol raqamlarini topish (1., 2., 3., ...)
+2. Har raqamning (x, y) koordinatasi
+3. Nisbiy masofa: anchor.x + offset = Bubble A, B, C, D, E
+
+Afzalliklari:
+- Perspective'dan mustaqil
+- Har savol o'z anchor'iga ega
+- Aniq koordinatalar
+
+Kamchiliklari:
+- Tesseract o'rnatilgan bo'lishi kerak
+- OCR xatolari bo'lishi mumkin
+
+B) CORNER-BASED SYSTEM (Priority 1)
+------------------------------------
+Fayl: backend/utils/relative_coordinate_mapper.py
+
+Jarayon:
+1. Corner marker'lar topiladi (4 ta)
+2. Corner'lar orasidagi masofa (185mm x 272mm)
+3. PDF koordinatalari (mm) → Nisbiy (0-1)
+4. Nisbiy (0-1) → Pixel koordinatalari
+
+Formula:
+--------
+relative_x = (element_x_mm - corner_left_mm) / width_between_corners_mm
+pixel_x = corner_left_px + (relative_x * width_between_corners_px)
+
+Afzalliklari:
+- Perspective distortion'dan himoyalangan
+- Image size'dan mustaqil
+- 100% aniq nisbiy koordinatalar
+
+C) TEMPLATE-BASED SYSTEM (Priority 2)
+--------------------------------------
+Fayl: backend/utils/template_coordinate_mapper.py
+
+Jarayon:
+1. Imtihon yaratilganda coordinate template saqlanadi
+2. Tekshirishda o'sha template ishlatiladi
+3. Corner marker'lar topiladi
+4. Template'dagi nisbiy koordinatalar pixel'ga o'giriladi
+
+Afzalliklari:
+- EvalBee kabi professional tizim
+- 100% aniq (template'dan)
+
+D) FALLBACK SYSTEM (Priority 3)
+--------------------------------
+Fayl: backend/utils/coordinate_mapper.py
+
+Jarayon:
+1. Fixed koordinatalar (mm)
+2. Image size'ga bog'liq hisoblash
+3. Pixels per mm: width / 210, height / 297
+
+Kamchiliklari:
+- Perspective'ga sezgir
+- Image size'ga bog'liq
+
+================================================================================
+
+4. OMR DETECTION (BUBBLE ANIQLASH)
+===================================
+
+Fayl: backend/services/omr_detector.py
+
+ASOSIY MUAMMO: Savol raqamini bubble deb topmasligi kerak!
+
+Jarayon:
+--------
+1. Har bubble uchun ROI (Region of Interest) ajratish:
+   
+   MUHIM: ROI juda kichik bo'lishi kerak!
+   
+   roi_radius = radius * 1.1  # Faqat 10% katta
+   x1 = x - roi_radius
+   x2 = x + roi_radius
+   y1 = y - roi_radius
+   y2 = y + roi_radius
+   
+   NOTO'G'RI: roi_radius = radius * 2.0 (savol raqamini ham qamrab oladi!)
+
+2. Bubble tahlili:
+   
+   a) FULL CIRCLE mask yaratish
+   b) INNER CIRCLE mask yaratish (80% radius)
+   c) Darkness hisoblash (qoralik)
+   d) Coverage hisoblash (qoplash)
+   e) Fill ratio hisoblash (to'liq maydon foizi)
+   f) Inner fill hisoblash (ichki doira foizi)
+
+3. Score hisoblash:
+   
+   if inner_fill < 40:
+       score = inner_fill * 0.5  # Yarim belgilashni rad etish
+   else:
+       score = darkness * 0.30 + coverage * 0.20 + fill_ratio * 0.50
+
+4. Decision making (COMPARATIVE):
+   
+   a) Barcha variantlarni taqqoslash
+   b) Eng yuqori score'ni tanlash
+   c) Ikkinchi variant bilan farqni tekshirish
+   
+   Qoidalar:
+   - inner_fill < 50% → NO_MARK
+   - 2+ bubble inner_fill > 50% → MULTIPLE_MARKS
+   - Farq < 10% → LOW_CONFIDENCE
+
+Natija:
+-------
+{
+    'questionNumber': 1,
+    'answer': 'A',
+    'confidence': 95,
+    'warning': None,
+    'allScores': [
+        {'variant': 'A', 'score': 85.2, 'inner_fill': 78.5},
+        {'variant': 'B', 'score': 12.3, 'inner_fill': 8.2},
+        ...
+    ]
+}
+
+================================================================================
+
+5. GRADING (BAHOLASH)
+=====================
+
+Fayl: backend/services/grader.py
+
+Jarayon:
+--------
+1. OMR natijalarini olish
+2. Answer key bilan taqqoslash
+3. To'g'ri/noto'g'ri hisoblash
+4. Ball hisoblash:
+   - To'g'ri javob: +correctScore
+   - Noto'g'ri javob: wrongScore (odatda 0 yoki manfiy)
+5. Foiz hisoblash
+6. Baho berish (5-ball tizimi)
+
+Natija:
+-------
+{
+    'totalScore': 85,
+    'maxScore': 100,
+    'percentage': 85.0,
+    'correctAnswers': 34,
+    'incorrectAnswers': 6,
+    'grade': {'numeric': 5, 'text': "A'lo"},
+    'topicResults': [...]
+}
+
+================================================================================
+
+6. ANNOTATION (VIZUAL KO'RSATISH)
+==================================
+
+Fayl: backend/services/image_annotator.py
+
+ASOSIY MUAMMO: Annotation koordinatalari bubble koordinatalari bilan mos kelishi kerak!
+
+Jarayon:
+--------
+1. Grayscale image'ni BGR'ga o'girish (rangli annotation uchun)
+
+2. Har savol uchun annotation:
+   
+   MANTIQ:
+   - Student javob bermagan → HECH NARSA
+   - Student to'g'ri → KO'K to'rtburchak
+   - Student xato → QIZIL (student) + YASHIL (to'g'ri)
+
+3. Annotation parametrlari:
+   
+   THICKNESS = 2  # Yupqa chiziqlar
+   PADDING = 0    # Padding yo'q (bubble o'lchamiga teng)
+   
+   x1 = x - radius - PADDING
+   y1 = y - radius - PADDING
+   x2 = x + radius + PADDING
+   y2 = y + radius + PADDING
+   
+   cv2.rectangle(image, (x1, y1), (x2, y2), color, THICKNESS)
+
+4. Ranglar:
+   - YASHIL (0, 255, 0): To'g'ri javob
+   - KO'K (255, 128, 0): Student to'g'ri
+   - QIZIL (0, 0, 255): Student xato
+
+5. Base64 encoding:
+   - JPEG format (quality=90)
+   - data:image/jpeg;base64,...
+
+Natija: Base64 encoded annotated image
+
+================================================================================
+
+7. API ENDPOINTS
+================
+
+Backend: http://localhost:8000
+
+GET /
+-----
+Root endpoint, system info
+
+GET /health
+-----------
+Health check
+
+POST /api/grade-sheet
+----------------------
+Varaqni tekshirish
+
+Request:
+- file: Image file (multipart/form-data)
+- exam_structure: JSON string
+- answer_key: JSON string
+- coordinate_template: JSON string (optional)
+
+Response:
+{
+    "success": true,
+    "results": {...},
+    "annotatedImage": "data:image/jpeg;base64,...",
+    "statistics": {
+        "omr": {...},
+        "ai": {...},
+        "quality": {...},
+        "duration": 2.5
+    },
+    "metadata": {...}
+}
+
+================================================================================
+
+HOZIRGI MUAMMOLAR VA YECHIMLAR
+===============================
+
+MUAMMO 1: Annotation koordinatalari noto'g'ri
+----------------------------------------------
+Sabab: OMR detector savol raqamini bubble deb topmoqda
+
+Yechim:
+1. ROI'ni kichikroq qilish (radius * 1.1)
+2. Center'ni ROI koordinatalarida qayta hisoblash
+3. Savol raqamlarini hisobga olmaslik
+
+Kod:
+----
+# backend/services/omr_detector.py, line ~150
+roi_radius = int(radius * 1.1)  # MUHIM!
+x1 = max(0, x - roi_radius)
+x2 = min(image.shape[1], x + roi_radius)
+
+# Center in ROI coordinates
+center_x = x - x1
+center_y = y - y1
+
+MUAMMO 2: Annotation o'lchami katta
+-----------------------------------
+Sabab: THICKNESS va PADDING katta
+
+Yechim:
+1. THICKNESS = 2 (yupqa)
+2. PADDING = 0 (yo'q)
+
+Kod:
+----
+# backend/services/image_annotator.py, line ~20
+THICKNESS = 2
+PADDING = 0
+
+MUAMMO 3: Juda ko'p yashil annotation
+--------------------------------------
+Sabab: Student javob bermagan savollar ham annotation qilinmoqda
+
+Yechim:
+1. Student javob bermagan → HECH NARSA
+2. Faqat javob berilgan savollarni annotation qilish
+
+Kod:
+----
+# backend/services/image_annotator.py, line ~110
+if student_answer is None or student_answer == '':
+    return  # No annotation
+
+================================================================================
+
+TEXNIK TAFSILOTLAR
+==================
+
+PDF LAYOUT (mm):
+----------------
+Paper: 210 x 297 (A4)
+Corner markers: 15 x 15, margin 5mm
+Grid start: (25, 149)
+Bubble radius: 2.5
+Bubble spacing: 8
+First bubble offset: 8
+Row height: 5.5
+Questions per row: 2
+
+IMAGE PROCESSING:
+-----------------
+Target size: 1240 x 1754 px
+Pixels per mm: 5.90 x 5.91
+Corner detection: Contour-based
+Perspective correction: getPerspectiveTransform
+Enhancement: CLAHE + bilateral filter
+
+OMR DETECTION:
+--------------
+ROI radius: bubble_radius * 1.1
+Inner circle: 80% radius
+Min inner_fill: 50%
+Min darkness: 35%
+Min difference: 15%
+
+COORDINATE SYSTEMS:
+-------------------
+1. OCR Anchor: Tesseract + nisbiy masofa
+2. Corner-based: 4 corner + nisbiy koordinatalar
+3. Template-based: Saved template + corner'lar
+4. Fallback: Fixed mm + pixels per mm
+
+================================================================================
+
+DEPENDENCIES
+============
+
+Backend (Python):
+-----------------
+fastapi==0.104.1
+uvicorn==0.24.0
+opencv-python==4.8.1.78
+numpy==1.24.3
+pytesseract==0.3.10  # Optional
+pyzbar==0.1.9
+groq>=0.11.0  # Optional
+python-dotenv==1.0.0
+
+Frontend (Node.js):
+-------------------
+react==18.2.0
+typescript==5.2.2
+vite==5.0.0
+tailwindcss==3.3.0
+jspdf==2.5.1
+qrcode==1.5.3
+lucide-react==0.294.0
+
+================================================================================
+
+ISHGA TUSHIRISH
+===============
+
+Backend:
+--------
+cd backend
+pip install -r requirements.txt
+python main.py
+
+Frontend:
+---------
+npm install
+npm run dev
+
+Full Stack:
+-----------
+# Terminal 1
+cd backend && python main.py
+
+# Terminal 2
+npm run dev
+
+================================================================================
+
+XULOSA
+======
+
+Bu tizim 3 ta asosiy qismdan iborat:
+
+1. FRONTEND (React):
+   - Imtihon yaratish
+   - PDF generatsiya
+   - Javob kalitlari
+   - Tekshirish UI
+
+2. BACKEND (FastAPI):
+   - Image processing (OpenCV)
+   - OMR detection
+   - Coordinate calculation
+   - Grading
+   - Annotation
+
+3. KOORDINATA TIZIMI:
+   - OCR anchor (eng yaxshi)
+   - Corner-based (yaxshi)
+   - Template-based (yaxshi)
+   - Fallback (o'rtacha)
+
+ASOSIY MUAMMOLAR:
+- OMR detector savol raqamini topmasligi kerak (ROI kichik bo'lishi kerak)
+- Annotation koordinatalari to'g'ri bo'lishi kerak
+- Student javob bermagan savollar annotation qilinmasligi kerak
+
+YECHIMLAR:
+- ROI radius = bubble_radius * 1.1
+- Center'ni ROI koordinatalarida hisoblash
+- Student javob bermagan → return (no annotation)
+
+================================================================================
+                              OXIRI
+================================================================================
