@@ -3,14 +3,14 @@
 
 set -o errexit
 
-# Install system dependencies
+echo "Installing system dependencies..."
 apt-get update
 apt-get install -y tesseract-ocr libzbar0 libgl1-mesa-glx libglib2.0-0
 
-# Upgrade pip
-pip install --upgrade pip
+echo "Upgrading pip and installing build tools..."
+pip install --upgrade pip setuptools wheel
 
-# Install Python dependencies
+echo "Installing Python dependencies..."
 pip install -r requirements.txt
 
 echo "Backend build complete!"
