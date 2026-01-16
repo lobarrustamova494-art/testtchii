@@ -4,31 +4,31 @@ uvicorn[standard]==0.24.0
 python-multipart==0.0.21
 pydantic==2.5.0
 
-# Build tools
+# Build tools (must be first)
 setuptools>=65.0.0
 wheel>=0.38.0
 
-# Image Processing
-opencv-python==4.8.1.78
-numpy==1.24.3
-Pillow==10.1.0
-scikit-image==0.22.0
+# Image Processing (use pre-built wheels)
+opencv-python-headless==4.8.1.78
+numpy>=1.24.0,<2.0.0
+Pillow>=10.0.0
+scikit-image>=0.22.0
 
 # OMR Specific
-imutils==0.5.4
-scipy==1.11.4
+imutils>=0.5.4
+scipy>=1.11.0
 
 # QR Code Detection
-pyzbar==0.1.9
+pyzbar>=0.1.9
 
 # OCR
-pytesseract==0.3.10
+pytesseract>=0.3.10
 
 # AI
 groq>=0.11.0
 
 # Utils
-python-dotenv==1.0.0
-pdf2image==1.16.3
-reportlab==4.0.7
-pandas==2.1.3
+python-dotenv>=1.0.0
+pdf2image>=1.16.0
+reportlab>=4.0.0
+pandas>=2.1.0
