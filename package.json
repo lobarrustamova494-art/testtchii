@@ -1,6 +1,7 @@
 {
 	"name": "evallbee-exam-system",
 	"version": "1.0.0",
+	"type": "module",
 	"description": "EvallBee - Imtihon yaratish va tekshirish tizimi",
 	"main": "index.js",
 	"scripts": {
