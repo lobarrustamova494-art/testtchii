@@ -10,10 +10,16 @@ load_dotenv()
 class Settings:
     # API Keys
     GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
+    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
+    
+    # Database
+    MONGODB_URL = os.getenv('MONGODB_URL', 'mongodb://localhost:27017')
+    DATABASE_NAME = os.getenv('DATABASE_NAME', 'evalbee_omr')
+    USE_DATABASE = os.getenv('USE_DATABASE', 'true').lower() == 'true'
     
     # Server
     HOST = os.getenv('HOST', '0.0.0.0')
-    PORT = int(os.getenv('PORT', 8000))
+    PORT = int(os.getenv('PORT', 8001))
     
     # Processing
     MAX_FILE_SIZE = int(os.getenv('MAX_FILE_SIZE', 10485760))  # 10MB
@@ -34,32 +40,40 @@ class Settings:
     # Set to False to use new PDF layout (gridStartY=149mm)
     USE_OLD_PDF_LAYOUT = False  # Changed to False for new PDFs
     
-    # OMR Detection - OPTIMAL PARAMETERS (from testing)
-    BUBBLE_RADIUS = 8  # pixels in processed image
-    MIN_DARKNESS = 35.0  # % - minimum darkness to consider as mark
-    MIN_COVERAGE = 40.0  # % - minimum coverage of dark pixels
-    MIN_INNER_FILL = 50.0  # % - MOST IMPORTANT! Rejects partial marks
-    MIN_DIFFERENCE = 15.0  # % - minimum difference between 1st and 2nd
-    MULTIPLE_MARKS_THRESHOLD = 10.0  # % - if difference < this, multiple marks
+    # OMR Detection - CORRECTED PARAMETERS
+    BUBBLE_RADIUS = 29  # FIXED: 2.5mm * 11.81 px/mm = 29.5 pixels (was 8!)
+    MIN_DARKNESS = 12.0  # % - MAXIMUM SENSITIVITY for very light marks
+    MIN_COVERAGE = 20.0  # % - FURTHER LOWERED from 25.0 for partial marks
+    MIN_INNER_FILL = 15.0  # % - MAXIMUM SENSITIVITY for light marks
+    MIN_DIFFERENCE = 4.0  # % - MAXIMUM SENSITIVITY for closer marks
+    MULTIPLE_MARKS_THRESHOLD = 4.0  # % - MAXIMUM SENSITIVITY
     
-    # Corner Detection - SCORING WEIGHTS
-    CORNER_ASPECT_WEIGHT = 0.10  # Square shape
-    CORNER_SIZE_WEIGHT = 0.15  # Correct size
-    CORNER_DIST_WEIGHT = 0.25  # Near expected position
-    CORNER_DARKNESS_WEIGHT = 0.30  # Darkness (most important)
-    CORNER_UNIFORMITY_WEIGHT = 0.20  # Uniform color
-    CORNER_MIN_SCORE = 0.4  # Minimum score to accept as corner
+    # Corner Detection - IMPROVED SCORING WEIGHTS
+    CORNER_ASPECT_WEIGHT = 0.15  # Square shape (increased)
+    CORNER_SIZE_WEIGHT = 0.20  # Correct size (increased)
+    CORNER_DIST_WEIGHT = 0.30  # Near expected position (increased)
+    CORNER_DARKNESS_WEIGHT = 0.25  # Darkness (decreased)
+    CORNER_UNIFORMITY_WEIGHT = 0.10  # Uniform color (decreased)
+    CORNER_MIN_SCORE = 0.3  # LOWERED from 0.4 for better detection
     
     # CORS
     CORS_ORIGINS = os.getenv(
         'CORS_ORIGINS', 
-        'http://localhost:3000,http://localhost:5173,https://evalbee-frontend.onrender.com'
+        'http://localhost:3000,http://localhost:5173,http://10.64.226.226:3000,https://evalbee-frontend.onrender.com'
     ).split(',')
     
-    # Groq Model - TEMPORARILY DISABLED (model decommissioned)
-    GROQ_MODEL = "llama-3.2-90b-vision-preview"  # Decommissioned
-    GROQ_TEMPERATURE = 0.1
-    GROQ_MAX_TOKENS = 200
-    ENABLE_AI_VERIFICATION = False  # Disabled until new vision model available
+    # AI Verification - TEMPORARILY DISABLED due to quota limit
+    ENABLE_AI_VERIFICATION = False  # Temporarily disabled due to OpenAI quota
+    AI_PROVIDER = os.getenv('AI_PROVIDER', 'openai')  # 'openai' or 'groq'
+    
+    # OpenAI Settings
+    OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'gpt-4o')  # GPT-4 Omni with vision
+    OPENAI_TEMPERATURE = float(os.getenv('OPENAI_TEMPERATURE', 0.1))
+    OPENAI_MAX_TOKENS = int(os.getenv('OPENAI_MAX_TOKENS', 200))
+    
+    # Groq Settings (fallback)
+    GROQ_MODEL = os.getenv('GROQ_MODEL', 'llama-3.1-8b-instant')  # Updated to available model
+    GROQ_TEMPERATURE = float(os.getenv('GROQ_TEMPERATURE', 0.1))
+    GROQ_MAX_TOKENS = int(os.getenv('GROQ_MAX_TOKENS', 200))
 
 settings = Settings()

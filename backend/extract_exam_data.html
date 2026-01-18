@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Extract Exam Data</title>
+	<style>
+		body {
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			max-width: 1200px;
+			margin: 50px auto;
+			padding: 20px;
+			background: #f5f5f5;
+		}
+
+		.container {
+			background: white;
+			padding: 30px;
+			border-radius: 10px;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+		}
+
+		h1 {
+			color: #333;
+			border-bottom: 3px solid #4CAF50;
+			padding-bottom: 10px;
+		}
+
+		.instructions {
+			background: #e3f2fd;
+			padding: 15px;
+			border-radius: 5px;
+			margin: 20px 0;
+			border-left: 4px solid #2196F3;
+		}
+
+		button {
+			background: #4CAF50;
+			color: white;
+			border: none;
+			padding: 12px 24px;
+			font-size: 16px;
+			border-radius: 5px;
+			cursor: pointer;
+			margin: 10px 5px;
+		}
+
+		button:hover {
+			background: #45a049;
+		}
+
+		button.secondary {
+			background: #2196F3;
+		}
+
+		button.secondary:hover {
+			background: #0b7dda;
+		}
+
+		.output {
+			background: #f9f9f9;
+			border: 1px solid #ddd;
+			padding: 15px;
+			border-radius: 5px;
+			margin-top: 20px;
+			max-height: 500px;
+			overflow-y: auto;
+		}
+
+		pre {
+			margin: 0;
+			white-space: pre-wrap;
+			word-wrap: break-word;
+		}
+
+		.exam-list {
+			margin: 20px 0;
+		}
+
+		.exam-item {
+			background: #fff;
+			border: 1px solid #ddd;
+			padding: 15px;
+			margin: 10px 0;
+			border-radius: 5px;
+			cursor: pointer;
+			transition: all 0.3s;
+		}
+
+		.exam-item:hover {
+			background: #f0f0f0;
+			border-color: #4CAF50;
+		}
+
+		.exam-item.selected {
+			background: #e8f5e9;
+			border-color: #4CAF50;
+			border-width: 2px;
+		}
+
+		.success {
+			color: #4CAF50;
+			font-weight: bold;
+		}
+
+		.error {
+			color: #f44336;
+			font-weight: bold;
+		}
+
+		.info {
+			color: #2196F3;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="container">
+		<h1>📋 Extract Exam Data from localStorage</h1>
+
+		<div class="instructions">
+			<h3>📝 Ko'rsatmalar:</h3>
+			<ol>
+				<li>Loyihani ishga tushiring: <code>npm run dev</code></li>
+				<li>Browser'da oching: <code>http://localhost:3000</code></li>
+				<li>Login qiling va exam yarating (agar yo'q bo'lsa)</li>
+				<li>Ushbu sahifani oching</li>
+				<li>"Load Exams" tugmasini bosing</li>
+				<li>5-imtihonni tanlang</li>
+				<li>"Extract Selected Exam" tugmasini bosing</li>
+				<li>Ma'lumotlarni copy qiling</li>
+			</ol>
+		</div>
+
+		<div>
+			<button onclick="loadExams()">🔄 Load Exams from localStorage</button>
+			<button onclick="loadAnswerKeys()" class="secondary">🔑 Load Answer Keys</button>
+			<button onclick="clearOutput()" class="secondary">🗑️ Clear Output</button>
+		</div>
+
+		<div id="examList" class="exam-list"></div>
+
+		<div>
+			<button onclick="extractSelectedExam()" style="background: #FF9800;">📤 Extract Selected Exam</button>
+			<button onclick="extractAllData()" class="secondary">📦 Extract All Data</button>
+			<button onclick="saveToFile()" style="background: #9C27B0; color: white;">💾 Save to File</button>
+		</div>
+
+		<div id="output" class="output" style="display: none;">
+			<h3>📊 Output:</h3>
+			<pre id="outputContent"></pre>
+		</div>
+	</div>
+
+	<script>
+		let selectedExam = null
+		let allExams = []
+		let allAnswerKeys = []
+
+		function loadExams() {
+			try {
+				const examsData = localStorage.getItem('exams')
+				if (!examsData) {
+					alert('❌ No exams found in localStorage!\n\nPlease:\n1. Go to http://localhost:3000\n2. Login\n3. Create some exams\n4. Come back here')
+					return
+				}
+
+				allExams = JSON.parse(examsData)
+				displayExams(allExams)
+				showOutput(`✅ Loaded ${allExams.length} exams from localStorage`)
+			} catch (error) {
+				showOutput(`❌ Error loading exams: ${error.message}`, true)
+			}
+		}
+
+		function loadAnswerKeys() {
+			try {
+				allAnswerKeys = []
+				for (let i = 0; i < localStorage.length; i++) {
+					const key = localStorage.key(i)
+					if (key && key.startsWith('answerKey_')) {
+						const data = localStorage.getItem(key)
+						if (data) {
+							allAnswerKeys.push(JSON.parse(data))
+						}
+					}
+				}
+				showOutput(`✅ Loaded ${allAnswerKeys.length} answer keys from localStorage\n\n${JSON.stringify(allAnswerKeys, null, 2)}`)
+			} catch (error) {
+				showOutput(`❌ Error loading answer keys: ${error.message}`, true)
+			}
+		}
+
+		function displayExams(exams) {
+			const listDiv = document.getElementById('examList')
+			listDiv.innerHTML = '<h3>📚 Available Exams:</h3>'
+
+			exams.forEach((exam, index) => {
+				const div = document.createElement('div')
+				div.className = 'exam-item'
+				div.onclick = () => selectExam(exam, div)
+
+				const stats = calculateStats(exam)
+
+				div.innerHTML = `
+                    <strong>${exam.name || exam.id}</strong><br>
+                    <small class="info">
+                        ID: ${exam.id} | 
+                        Questions: ${stats.totalQuestions} | 
+                        Created: ${new Date(exam.createdAt).toLocaleDateString()}
+                    </small>
+                `
+
+				listDiv.appendChild(div)
+			})
+		}
+
+		function selectExam(exam, element) {
+			// Remove previous selection
+			document.querySelectorAll('.exam-item').forEach(item => {
+				item.classList.remove('selected')
+			})
+
+			// Select current
+			element.classList.add('selected')
+			selectedExam = exam
+
+			showOutput(`✅ Selected: ${exam.name || exam.id}`)
+		}
+
+		function calculateStats(exam) {
+			let totalQuestions = 0
+			if (exam.subjects && Array.isArray(exam.subjects)) {
+				exam.subjects.forEach(subject => {
+					if (subject.sections && Array.isArray(subject.sections)) {
+						subject.sections.forEach(section => {
+							totalQuestions += section.questionCount || 0
+						})
+					}
+				})
+			}
+			return { totalQuestions }
+		}
+
+		function extractSelectedExam() {
+			if (!selectedExam) {
+				alert('❌ Please select an exam first!')
+				return
+			}
+
+			try {
+				// Find answer keys for this exam
+				const examAnswerKeys = allAnswerKeys.filter(ak => ak.examId === selectedExam.id)
+
+				const output = {
+					exam: selectedExam,
+					answerKeys: examAnswerKeys,
+					stats: calculateStats(selectedExam)
+				}
+
+				const json = JSON.stringify(output, null, 2)
+				showOutput(`✅ Extracted exam: ${selectedExam.name || selectedExam.id}\n\n${json}`)
+
+				// Auto-save to file
+				const filename = `${selectedExam.id || 'exam'}_data.json`
+				downloadJSON(output, filename)
+
+			} catch (error) {
+				showOutput(`❌ Error extracting exam: ${error.message}`, true)
+			}
+		}
+
+		function extractAllData() {
+			try {
+				const output = {
+					exams: allExams,
+					answerKeys: allAnswerKeys,
+					timestamp: new Date().toISOString()
+				}
+
+				const json = JSON.stringify(output, null, 2)
+				showOutput(`✅ Extracted all data\n\n${json}`)
+
+			} catch (error) {
+				showOutput(`❌ Error extracting data: ${error.message}`, true)
+			}
+		}
+
+		function saveToFile() {
+			const content = document.getElementById('outputContent').textContent
+			if (!content || content.trim() === '') {
+				alert('❌ No data to save! Extract data first.')
+				return
+			}
+
+			try {
+				// Extract JSON from output (skip the success message)
+				const lines = content.split('\n')
+				const jsonStart = lines.findIndex(line => line.trim().startsWith('{'))
+				const jsonContent = lines.slice(jsonStart).join('\n')
+
+				const data = JSON.parse(jsonContent)
+				const filename = selectedExam ? `${selectedExam.id}_data.json` : 'exam_data.json'
+
+				downloadJSON(data, filename)
+
+			} catch (error) {
+				showOutput(`❌ Error saving file: ${error.message}`, true)
+			}
+		}
+
+		function downloadJSON(data, filename) {
+			const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+			const url = URL.createObjectURL(blob)
+			const a = document.createElement('a')
+			a.href = url
+			a.download = filename
+			document.body.appendChild(a)
+			a.click()
+			document.body.removeChild(a)
+			URL.revokeObjectURL(url)
+
+			showOutput(`✅ File saved: ${filename}`, false, true)
+		}
+
+		function showOutput(text, isError = false, append = false) {
+			const outputDiv = document.getElementById('output')
+			const outputContent = document.getElementById('outputContent')
+
+			outputDiv.style.display = 'block'
+
+			if (append) {
+				outputContent.textContent += '\n\n' + text
+			} else {
+				outputContent.textContent = text
+			}
+
+			if (isError) {
+				outputContent.style.color = '#f44336'
+			} else {
+				outputContent.style.color = '#333'
+			}
+
+			// Scroll to output
+			outputDiv.scrollIntoView({ behavior: 'smooth' })
+		}
+
+		function clearOutput() {
+			document.getElementById('output').style.display = 'none'
+			document.getElementById('outputContent').textContent = ''
+		}
+
+		// Auto-load on page load
+		window.onload = function () {
+			// Check if we're on localhost
+			if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+				loadExams()
+				loadAnswerKeys()
+			} else {
+				showOutput('⚠️  Please open this file from localhost (same origin as your app)', true)
+			}
+		};
+	</script>
+</body>
+
+</html>

@@ -1,0 +1,242 @@
+[
+  {
+    "question": 1,
+    "variant": "A",
+    "x": 170,
+    "y": 480
+  },
+  {
+    "question": 1,
+    "variant": "B",
+    "x": 200,
+    "y": 480
+  },
+  {
+    "question": 1,
+    "variant": "C",
+    "x": 230,
+    "y": 480
+  },
+  {
+    "question": 1,
+    "variant": "D",
+    "x": 260,
+    "y": 480
+  },
+  {
+    "question": 1,
+    "variant": "E",
+    "x": 290,
+    "y": 480
+  },
+  {
+    "question": 2,
+    "variant": "A",
+    "x": 550,
+    "y": 480
+  },
+  {
+    "question": 2,
+    "variant": "B",
+    "x": 580,
+    "y": 480
+  },
+  {
+    "question": 2,
+    "variant": "C",
+    "x": 610,
+    "y": 480
+  },
+  {
+    "question": 2,
+    "variant": "D",
+    "x": 640,
+    "y": 480
+  },
+  {
+    "question": 2,
+    "variant": "E",
+    "x": 670,
+    "y": 480
+  },
+  {
+    "question": 3,
+    "variant": "A",
+    "x": 170,
+    "y": 520
+  },
+  {
+    "question": 3,
+    "variant": "B",
+    "x": 200,
+    "y": 520
+  },
+  {
+    "question": 3,
+    "variant": "C",
+    "x": 230,
+    "y": 520
+  },
+  {
+    "question": 3,
+    "variant": "D",
+    "x": 260,
+    "y": 520
+  },
+  {
+    "question": 3,
+    "variant": "E",
+    "x": 290,
+    "y": 520
+  },
+  {
+    "question": 4,
+    "variant": "A",
+    "x": 550,
+    "y": 520
+  },
+  {
+    "question": 4,
+    "variant": "B",
+    "x": 580,
+    "y": 520
+  },
+  {
+    "question": 4,
+    "variant": "C",
+    "x": 610,
+    "y": 520
+  },
+  {
+    "question": 4,
+    "variant": "D",
+    "x": 640,
+    "y": 520
+  },
+  {
+    "question": 4,
+    "variant": "E",
+    "x": 670,
+    "y": 520
+  },
+  {
+    "question": 5,
+    "variant": "A",
+    "x": 170,
+    "y": 560
+  },
+  {
+    "question": 5,
+    "variant": "B",
+    "x": 200,
+    "y": 560
+  },
+  {
+    "question": 5,
+    "variant": "C",
+    "x": 230,
+    "y": 560
+  },
+  {
+    "question": 5,
+    "variant": "D",
+    "x": 260,
+    "y": 560
+  },
+  {
+    "question": 5,
+    "variant": "E",
+    "x": 290,
+    "y": 560
+  },
+  {
+    "question": 6,
+    "variant": "A",
+    "x": 550,
+    "y": 560
+  },
+  {
+    "question": 6,
+    "variant": "B",
+    "x": 580,
+    "y": 560
+  },
+  {
+    "question": 6,
+    "variant": "C",
+    "x": 610,
+    "y": 560
+  },
+  {
+    "question": 6,
+    "variant": "D",
+    "x": 640,
+    "y": 560
+  },
+  {
+    "question": 6,
+    "variant": "E",
+    "x": 670,
+    "y": 560
+  },
+  {
+    "question": 7,
+    "variant": "A",
+    "x": 170,
+    "y": 600
+  },
+  {
+    "question": 7,
+    "variant": "B",
+    "x": 200,
+    "y": 600
+  },
+  {
+    "question": 7,
+    "variant": "C",
+    "x": 230,
+    "y": 600
+  },
+  {
+    "question": 7,
+    "variant": "D",
+    "x": 260,
+    "y": 600
+  },
+  {
+    "question": 7,
+    "variant": "E",
+    "x": 290,
+    "y": 600
+  },
+  {
+    "question": 8,
+    "variant": "A",
+    "x": 550,
+    "y": 600
+  },
+  {
+    "question": 8,
+    "variant": "B",
+    "x": 580,
+    "y": 600
+  },
+  {
+    "question": 8,
+    "variant": "C",
+    "x": 610,
+    "y": 600
+  },
+  {
+    "question": 8,
+    "variant": "D",
+    "x": 640,
+    "y": 600
+  },
+  {
+    "question": 8,
+    "variant": "E",
+    "x": 670,
+    "y": 600
+  }
+]

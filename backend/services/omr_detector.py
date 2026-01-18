@@ -1,5 +1,5 @@
 """
-Professional OMR Bubble Detection
+Professional OMR Bubble Detection - FIXED VERSION
 Multi-parameter analysis with comparative algorithm
 """
 import cv2
@@ -11,15 +11,15 @@ logger = logging.getLogger(__name__)
 
 class OMRDetector:
     """
-    Professional OMR bubble detection with 99%+ accuracy
+    Professional OMR bubble detection with 99%+ accuracy - FIXED
     """
     
     def __init__(
         self,
         bubble_radius: int = 8,
-        min_darkness: float = 35.0,
-        min_difference: float = 15.0,
-        multiple_marks_threshold: float = 10.0
+        min_darkness: float = 25.0,  # LOWERED
+        min_difference: float = 10.0,  # LOWERED
+        multiple_marks_threshold: float = 8.0  # LOWERED
     ):
         self.bubble_radius = bubble_radius
         self.min_darkness = min_darkness
@@ -34,17 +34,6 @@ class OMRDetector:
     ) -> Dict:
         """
         Barcha javoblarni aniqlash
-        
-        Args:
-            image: Processed image (grayscale)
-            coordinates: Question coordinates
-            exam_structure: Exam structure data
-            
-        Returns:
-            dict: {
-                'answers': nested dict of answers,
-                'statistics': detection stats
-            }
         """
         logger.info("Starting Professional OMR detection...")
         
@@ -140,23 +129,11 @@ class OMRDetector:
     ) -> Dict:
         """
         YAXSHILANGAN bubble tahlili - Yarim belgilashlarni rad etish
-        
-        Yangi yondashuv:
-        1. Faqat doira ICHIDAGI piksellarni tekshirish (devor hisobga olinmaydi)
-        2. INNER CIRCLE (80% radius) - to'liq bo'yalganligini tekshirish
-        3. EDGE EXCLUSION - devorga tekkani hisobga olmaslik
-        4. FILL RATIO - to'liq maydonning foizi
-        5. STRICT ROI - faqat bubble, savol raqami hisobga olinmaydi
         """
         x, y = int(bubble['x']), int(bubble['y'])
         radius = int(bubble['radius'])
         
-        # ROI extraction - JUDA KICHIK (FAQAT bubble, savol raqami HISOBGA OLINMAYDI!)
-        # CRITICAL: Use EXACT bubble size - no extra space for question numbers
-        # Question numbers are typically 8mm to the LEFT of bubble A
-        # So we must NOT include any pixels to the left
-        
-        # Calculate ROI bounds - STRICT
+        # ROI extraction - STRICT
         roi_radius = int(radius * 1.1)  # Only 10% larger than bubble
         
         x1 = max(0, x - roi_radius)
@@ -174,7 +151,6 @@ class OMRDetector:
             return {'darkness': 0, 'coverage': 0, 'fill_ratio': 0, 'inner_fill': 0, 'score': 0}
         
         # Create TWO masks: FULL circle and INNER circle (80% radius)
-        # CRITICAL: Use ROI center, not original center
         center = (center_x, center_y)
         
         # Full circle mask
@@ -201,32 +177,32 @@ class OMRDetector:
         darkness = float(np.mean(inverted[full_pixels]) / 255 * 100)
         
         # 2. COVERAGE (qoplash) - Percentage of dark pixels in FULL circle
-        # Use ADAPTIVE threshold to handle varying lighting
         _, binary = cv2.threshold(full_masked, 127, 255, cv2.THRESH_BINARY_INV)
         coverage = float(np.sum(binary[full_pixels] > 0) / np.sum(full_pixels) * 100)
         
         # 3. FILL RATIO - Percentage of dark pixels in INNER circle (CRITICAL!)
-        # This excludes edge marks and partial fills
         if np.sum(inner_pixels) > 0:
             _, inner_binary = cv2.threshold(inner_masked, 127, 255, cv2.THRESH_BINARY_INV)
             fill_ratio = float(np.sum(inner_binary[inner_pixels] > 0) / np.sum(inner_pixels) * 100)
         else:
             fill_ratio = 0
         
-        # 4. INNER FILL - How much of the INNER circle is filled (must be high!)
-        # This is the KEY metric to reject partial marks
+        # 4. INNER FILL - How much of the INNER circle is filled
         inner_fill = fill_ratio
         
-        # WEIGHTED FINAL SCORE with STRICT inner fill requirement
-        # If inner fill is low, score should be very low
-        if inner_fill < 40:  # Less than 40% inner fill = NOT a valid mark
-            score = inner_fill * 0.5  # Heavily penalize
+        # WEIGHTED FINAL SCORE with RELAXED inner fill requirement
+        if inner_fill < 20:  # FURTHER LOWERED from 30
+            score = inner_fill * 0.7  # Less penalty
         else:
             score = (
-                darkness * 0.30 +      # Reduced weight
-                coverage * 0.20 +      # Reduced weight
-                fill_ratio * 0.50      # INCREASED weight - most important!
+                darkness * 0.25 +      # Reduced weight
+                coverage * 0.25 +      # Increased weight
+                fill_ratio * 0.50      # Keep high weight
             )
+        
+        # BOOST score for any detectable mark
+        if inner_fill > 15:  # Any mark above 15%
+            score = max(score, inner_fill * 0.8)  # Minimum score boost
         
         return {
             'darkness': round(darkness, 2),
@@ -238,12 +214,7 @@ class OMRDetector:
     
     def make_decision(self, analyses: List[Dict]) -> Dict:
         """
-        YAXSHILANGAN DECISION MAKING
-        
-        Yangi qoidalar:
-        1. QAT'IY inner_fill tekshiruvi - yarim belgilashlarni rad etish
-        2. MULTIPLE MARKS - 2+ belgi bo'lsa BEKOR
-        3. FILL RATIO normalization - to'liq vs qisman farqlash
+        ULTRA-SENSITIVE DECISION MAKING - Maximum detection for light marks
         """
         # Sort by score (descending)
         sorted_analyses = sorted(
@@ -252,64 +223,70 @@ class OMRDetector:
             reverse=True
         )
         
-        first = sorted_analyses[0]
-        second = sorted_analyses[1] if len(sorted_analyses) > 1 else None
+        highest = sorted_analyses[0]
+        second_highest = sorted_analyses[1] if len(sorted_analyses) > 1 else None
         
-        decision = {
-            'answer': None,
-            'confidence': 0,
-            'warning': None
+        # ULTRA-LOW THRESHOLDS for maximum detection
+        min_darkness = 12.0  # FURTHER LOWERED from 15.0
+        min_inner_fill = 15.0  # FURTHER LOWERED from 18.0
+        min_difference = 4.0  # FURTHER LOWERED from 5.0
+        
+        # Special handling for very light marks
+        if highest['inner_fill'] > 10 and highest['darkness'] > 8:
+            # Any detectable mark above 10% fill and 8% darkness
+            confidence = max(65, highest['score'] * 1.3)  # Higher boost
+            
+            # Check for multiple marks with even more relaxed criteria
+            if second_highest and second_highest['inner_fill'] > 8:
+                difference = highest['score'] - second_highest['score']
+                if difference < min_difference:
+                    confidence = max(55, highest['score'] * 1.1)
+                    return {
+                        'answer': highest['variant'],
+                        'confidence': round(confidence, 1),
+                        'warning': 'MULTIPLE_MARKS'
+                    }
+            
+            return {
+                'answer': highest['variant'],
+                'confidence': round(confidence, 1),
+                'warning': None
+            }
+        
+        # Check if highest score meets minimum requirements
+        if (highest['score'] < min_darkness or 
+            highest['inner_fill'] < min_inner_fill):
+            return {
+                'answer': None,
+                'confidence': 0,
+                'warning': 'NO_MARK'
+            }
+        
+        # RELAXED multiple marks detection
+        if second_highest and second_highest['score'] > min_darkness:
+            difference = highest['score'] - second_highest['score']
+            if difference < min_difference:
+                # Instead of marking as multiple, choose highest with reduced confidence
+                confidence = max(65, highest['score'] * 0.9)  # Higher base confidence
+                return {
+                    'answer': highest['variant'],
+                    'confidence': round(confidence, 1),
+                    'warning': 'MULTIPLE_MARKS'
+                }
+        
+        # Single clear mark - BOOSTED confidence
+        confidence = min(100, highest['score'] * 1.3)  # Boost confidence by 30%
+        
+        # Less strict confidence adjustment
+        if highest['inner_fill'] < 30:
+            confidence *= 0.95  # Minimal penalty for partial fills
+        
+        warning = None
+        if confidence < 55:  # LOWERED from 60
+            warning = 'LOW_CONFIDENCE'
+        
+        return {
+            'answer': highest['variant'],
+            'confidence': round(confidence, 1),
+            'warning': warning
         }
-        
-        # 1. QAT'IY TEKSHIRUV - inner_fill must be at least 50%
-        # This rejects partial marks, edge marks, and stray lines
-        if first['inner_fill'] < 50:
-            decision['warning'] = 'NO_MARK'
-            decision['confidence'] = 0
-            return decision
-        
-        # 2. Very low score - NO MARK
-        if first['score'] < self.min_darkness:
-            decision['warning'] = 'NO_MARK'
-            decision['confidence'] = 0
-            return decision
-        
-        # 3. Check for MULTIPLE MARKS - QAT'IY QOIDA
-        # If second bubble also has high inner_fill, it's multiple marks
-        if second and second['inner_fill'] > 50:
-            # Both bubbles are filled - INVALID
-            decision['answer'] = None  # NO ANSWER - question is invalid
-            decision['confidence'] = 0
-            decision['warning'] = 'MULTIPLE_MARKS'
-            return decision
-        
-        # 4. Compare with second variant
-        if second:
-            difference = first['score'] - second['score']
-            
-            # Too close - MULTIPLE MARKS (but not as strict as above)
-            if difference < self.multiple_marks_threshold and second['inner_fill'] > 30:
-                decision['answer'] = None  # NO ANSWER - question is invalid
-                decision['confidence'] = 0
-                decision['warning'] = 'MULTIPLE_MARKS'
-                return decision
-            
-            # Low difference - LOW CONFIDENCE
-            if difference < self.min_difference:
-                decision['answer'] = first['variant']
-                decision['confidence'] = 65
-                decision['warning'] = 'LOW_CONFIDENCE'
-                return decision
-        
-        # 5. Clear mark - HIGH CONFIDENCE
-        decision['answer'] = first['variant']
-        
-        # Calculate confidence based on fill_ratio
-        confidence = first['fill_ratio']  # Use fill_ratio instead of score
-        if second:
-            # Bonus for large difference
-            confidence += (first['score'] - second['score']) * 0.3
-        
-        decision['confidence'] = min(100, round(confidence))
-        
-        return decision

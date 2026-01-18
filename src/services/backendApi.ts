@@ -1,7 +1,9 @@
 /**
  * Backend API Service
- * Connects React frontend to Python FastAPI backend
+ * Connects React frontend to Python FastAPI backend with JWT authentication
  */
+
+import { authApi } from './authApi'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'
 
@@ -9,7 +11,13 @@ export interface BackendGradingRequest {
 	file: File
 	examStructure: any
 	answerKey: { [questionNumber: number]: string }
-	coordinateTemplate?: any // YANGI: Optional coordinate template
+	coordinateTemplate?: any // Optional coordinate template
+	manualCalibration?: Array<{
+		question: number
+		variant: string
+		x: number
+		y: number
+	}> // YANGI: Manual calibration points
 }
 
 export interface BackendGradingResponse {
@@ -69,6 +77,16 @@ export class BackendApiService {
 	}
 
 	/**
+	 * Get authorization headers with JWT token
+	 */
+	private getAuthHeaders(): HeadersInit {
+		const token = authApi.getToken()
+		return {
+			...(token && { Authorization: `Bearer ${token}` }),
+		}
+	}
+
+	/**
 	 * Check if backend is available
 	 */
 	async healthCheck(): Promise<boolean> {
@@ -77,6 +95,7 @@ export class BackendApiService {
 				method: 'GET',
 				headers: {
 					Accept: 'application/json',
+					...this.getAuthHeaders(),
 				},
 			})
 
@@ -105,6 +124,7 @@ export class BackendApiService {
 				method: 'POST',
 				headers: {
 					Accept: 'application/json',
+					...this.getAuthHeaders(),
 				},
 			})
 
@@ -120,10 +140,72 @@ export class BackendApiService {
 	}
 
 	/**
+	 * Ultra Precise Grading - 100% aniqlik uchun
+	 */
+	async ultraPreciseGrade(
+		request: BackendGradingRequest,
+	): Promise<BackendGradingResponse> {
+		const formData = new FormData()
+		formData.append('file', request.file)
+		formData.append('exam_structure', JSON.stringify(request.examStructure))
+		formData.append('answer_key', JSON.stringify(request.answerKey))
+
+		// Optional coordinate template
+		if (request.coordinateTemplate) {
+			formData.append(
+				'coordinate_template',
+				JSON.stringify(request.coordinateTemplate),
+			)
+		}
+
+		// Optional manual calibration
+		if (request.manualCalibration) {
+			formData.append(
+				'manual_calibration',
+				JSON.stringify(request.manualCalibration),
+			)
+		}
+
+		try {
+			const response = await fetch(`${this.baseUrl}/api/ultra-precise-grade`, {
+				method: 'POST',
+				headers: {
+					...this.getAuthHeaders(),
+				},
+				body: formData,
+			})
+
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => ({}))
+				throw new Error(
+					errorData.detail || `HTTP ${response.status}: ${response.statusText}`,
+				)
+			}
+
+			const data = await response.json()
+
+			// Handle calibration needed response
+			if (!data.success && data.calibration_needed) {
+				throw new Error(
+					JSON.stringify({
+						type: 'CALIBRATION_NEEDED',
+						data: data,
+					}),
+				)
+			}
+
+			return data
+		} catch (error) {
+			console.error('Ultra precise grading failed:', error)
+			throw error
+		}
+	}
+
+	/**
 	 * Grade answer sheet with Professional OMR + AI
 	 */
 	async gradeSheet(
-		request: BackendGradingRequest
+		request: BackendGradingRequest,
 	): Promise<BackendGradingResponse> {
 		const formData = new FormData()
 		formData.append('file', request.file)
@@ -134,7 +216,7 @@ export class BackendApiService {
 		if (request.coordinateTemplate) {
 			formData.append(
 				'coordinate_template',
-				JSON.stringify(request.coordinateTemplate)
+				JSON.stringify(request.coordinateTemplate),
 			)
 			console.log('✅ Sending coordinate template to backend')
 		}
@@ -142,13 +224,16 @@ export class BackendApiService {
 		try {
 			const response = await fetch(`${this.baseUrl}/api/grade-sheet`, {
 				method: 'POST',
+				headers: {
+					...this.getAuthHeaders(),
+				},
 				body: formData,
 			})
 
 			if (!response.ok) {
 				const errorData = await response.json().catch(() => ({}))
 				throw new Error(
-					errorData.detail || `HTTP ${response.status}: ${response.statusText}`
+					errorData.detail || `HTTP ${response.status}: ${response.statusText}`,
 				)
 			}
 

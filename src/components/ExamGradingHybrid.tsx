@@ -28,7 +28,7 @@ import {
 } from '../services/backendApi'
 import { Exam, Toast as ToastType } from '../types'
 import { getAllAnswerKeys } from '../utils/storage'
-import CameraCaptureNew from './CameraCaptureNew'
+import CameraSystem from './CameraSystem'
 import Toast from './Toast'
 
 interface ExamGradingProps {
@@ -42,7 +42,7 @@ interface UploadedSheet {
 	preview: string
 	file: File
 	processed: boolean
-	processingMode?: 'backend' | 'frontend'
+	processingMode?: 'backend' | 'frontend' | 'template_matching'
 	metadata?: any
 	results?: any
 	statistics?: any
@@ -61,7 +61,7 @@ const ExamGradingHybrid: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 		'checking' | 'available' | 'unavailable'
 	>('checking')
 	const [useBackend, setUseBackend] = useState(true)
-	const [showCamera, setShowCamera] = useState(false)
+	const [showCameraSystem, setShowCameraSystem] = useState(false)
 	const fileInputRef = useRef<HTMLInputElement>(null)
 
 	// Get answer keys
@@ -117,8 +117,79 @@ const ExamGradingHybrid: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 				}
 			})
 		},
-		[]
+		[],
 	)
+
+	const processSheetWithTemplateMatching = async (sheet: UploadedSheet) => {
+		console.log('🎯 Processing with Template Matching (Unknown Layout)...')
+
+		try {
+			// Prepare answer key
+			const answerKey: { [key: number]: string } = {}
+			let questionNumber = 1
+
+			exam.subjects.forEach(subject => {
+				subject.sections.forEach(section => {
+					for (let i = 0; i < section.questionCount; i++) {
+						// Get answer from stored keys (variant A for now)
+						const variantKey = answerKeys.find(k => k.variant === 'A')
+						if (variantKey) {
+							answerKey[questionNumber] =
+								variantKey.answers[questionNumber] || 'A'
+						} else {
+							answerKey[questionNumber] = 'A' // Default
+						}
+						questionNumber++
+					}
+				})
+			})
+
+			// Call template matching API
+			const formData = new FormData()
+			formData.append('file', sheet.file)
+			formData.append('answer_key', JSON.stringify(answerKey))
+
+			const response = await fetch(
+				'http://localhost:8000/api/template-match-grade',
+				{
+					method: 'POST',
+					body: formData,
+				},
+			)
+
+			if (!response.ok) {
+				const errorData = await response.json()
+				throw new Error(errorData.detail || 'Template matching failed')
+			}
+
+			const result = await response.json()
+			console.log('✅ Template matching complete:', result)
+
+			// Update sheet with results
+			const updatedSheet: UploadedSheet = {
+				...sheet,
+				processed: true,
+				processingMode: 'template_matching',
+				results: result.results,
+				statistics: result.statistics,
+				metadata: result.metadata,
+				annotatedImage: result.annotatedImage,
+			}
+
+			setUploadedSheets(prev =>
+				prev.map(s => (s.id === sheet.id ? updatedSheet : s)),
+			)
+
+			// Show success message
+			setToast({
+				message: `✅ Template matching complete! ${result.results.score.accuracy}% accuracy (${result.statistics.processing_time}s)`,
+				type: 'success',
+			})
+		} catch (error) {
+			console.error('Template matching error:', error)
+			throw error
+		}
+	}
 
 	const processSheetWithBackend = async (sheet: UploadedSheet) => {
 		console.log('🚀 Processing with Backend (OpenCV + AI)...')
@@ -166,7 +237,7 @@ const ExamGradingHybrid: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 			}
 
 			setUploadedSheets(prev =>
-				prev.map(s => (s.id === sheet.id ? updatedSheet : s))
+				prev.map(s => (s.id === sheet.id ? updatedSheet : s)),
 			)
 
 			// Show success message with AI info
@@ -180,6 +251,59 @@ const ExamGradingHybrid: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 			})
 		} catch (error) {
 			console.error('Backend processing error:', error)
+
+			// Check if it's a calibration needed error
+			if (
+				error instanceof Error &&
+				error.message.includes('CALIBRATION_NEEDED')
+			) {
+				try {
+					const errorData = JSON.parse(error.message)
+					if (errorData.type === 'CALIBRATION_NEEDED') {
+						setToast({
+							message:
+								'Manual calibration needed. Trying alternative processing method...',
+							type: 'warning',
+						})
+
+						// Try template matching as fallback
+						await processSheetWithTemplateMatching(sheet)
+						return
+					}
+				} catch (parseError) {
+					// Continue with normal error handling
+				}
+			}
+
+			// Check for coordinate detection failure
+			if (
+				error instanceof Error &&
+				error.message.includes('Coordinate detection failed')
+			) {
+				setToast({
+					message:
+						"Koordinata aniqlashda muammo. Template matching usulini sinab ko'ramiz...",
+					type: 'warning',
+				})
+
+				try {
+					// Try template matching as fallback
+					await processSheetWithTemplateMatching(sheet)
+					return
+				} catch (templateError) {
+					console.error('Template matching fallback failed:', templateError)
+					setToast({
+						message: `Ikkala usul ham ishlamadi. Iltimos, rasm sifatini tekshiring:
+						• 4 ta burchak belgisi (qora kvadrat) aniq ko'rinsin
+						• Rasm yaxshi yoritilgan bo'lsin
+						• Javob varag'i to'liq ko'rinsin
+						• Yuqori sifatli rasm ishlating (800x1100px+)`,
+						type: 'error',
+					})
+					return
+				}
+			}
+
 			throw error
 		}
 	}
@@ -209,10 +333,38 @@ const ExamGradingHybrid: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 			}
 		} catch (error) {
 			console.error('Processing error:', error)
+
+			// Provide user-friendly error messages
+			let errorMessage = "Noma'lum xatolik yuz berdi"
+
+			if (error instanceof Error) {
+				const message = error.message.toLowerCase()
+
+				if (message.includes('coordinate detection failed')) {
+					errorMessage =
+						"Koordinatalarni aniqlashda xatolik. Rasm sifatini tekshiring va qayta urinib ko'ring."
+				} else if (message.includes('corner detection failed')) {
+					errorMessage =
+						"Burchak belgilarini topishda xatolik. Rasmda to'rt burchakda qora kvadratlar borligini tekshiring."
+				} else if (message.includes('template matching failed')) {
+					errorMessage =
+						'Shablon moslashtirish xatoligi. Rasm formati kutilgan formatga mos kelmasligi mumkin.'
+				} else if (message.includes('bubble detection failed')) {
+					errorMessage =
+						"Javob doiralarini topishda xatolik. Doiralar aniq ko'rinishini va to'g'ri to'ldirilganini tekshiring."
+				} else if (message.includes('image quality')) {
+					errorMessage =
+						"Rasm sifati yetarli emas. Yorqinroq va aniqroq rasm ishlatib ko'ring."
+				} else if (message.includes('network') || message.includes('fetch')) {
+					errorMessage =
+						"Server bilan bog'lanishda xatolik. Internet ulanishini tekshiring."
+				} else {
+					errorMessage = `Xatolik: ${error.message}`
+				}
+			}
+
 			setToast({
-				message: `Xatolik: ${
-					error instanceof Error ? error.message : "Noma'lum xatolik"
-				}`,
+				message: errorMessage,
 				type: 'error',
 			})
 		} finally {
@@ -224,8 +376,12 @@ const ExamGradingHybrid: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 		setUploadedSheets(prev => prev.filter(sheet => sheet.id !== id))
 	}
 
-	const openCamera = () => {
-		setShowCamera(true)
+	const openCameraSystem = () => {
+		setShowCameraSystem(true)
+	}
+
+	const closeCameraSystem = () => {
+		setShowCameraSystem(false)
 	}
 
 	const handleCameraCapture = (imageFile: File) => {
@@ -235,24 +391,20 @@ const ExamGradingHybrid: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 			const result = e.target?.result as string
 			const sheet: UploadedSheet = {
 				id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-				name: imageFile.name,
+				name: `Camera_${new Date().toLocaleTimeString()}`,
 				preview: result,
 				file: imageFile,
 				processed: false,
 			}
 			setUploadedSheets(prev => [...prev, sheet])
-			setShowCamera(false)
+			setShowCameraSystem(false)
 
 			setToast({
-				message: 'Rasm muvaffaqiyatli olindi!',
+				message: 'Rasm kameradan muvaffaqiyatli olindi!',
 				type: 'success',
 			})
 		}
 		reader.readAsDataURL(imageFile)
-	}
-
-	const closeCamera = () => {
-		setShowCamera(false)
 	}
 
 	const handleDrop = useCallback((event: React.DragEvent) => {
@@ -326,15 +478,14 @@ const ExamGradingHybrid: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 			</header>
 
 			<main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-				{/* Camera Capture Component */}
-				{showCamera && (
-					<CameraCaptureNew
+				{/* Camera System Component */}
+				{showCameraSystem && (
+					<CameraSystem
 						onCapture={handleCameraCapture}
-						onClose={closeCamera}
+						onClose={closeCameraSystem}
 						examStructure={exam}
 					/>
 				)}
-
 				{/* System Status Panel */}
 				<div className='bg-white rounded-xl border p-6 mb-8'>
 					<div className='flex items-center justify-between mb-4'>
@@ -358,8 +509,8 @@ const ExamGradingHybrid: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 								backendStatus === 'available'
 									? 'bg-green-50 border-green-300'
 									: backendStatus === 'unavailable'
-									? 'bg-red-50 border-red-300'
-									: 'bg-gray-50 border-gray-300'
+										? 'bg-red-50 border-red-300'
+										: 'bg-gray-50 border-gray-300'
 							}`}
 						>
 							<div className='flex items-center gap-2 mb-2'>
@@ -391,8 +542,8 @@ const ExamGradingHybrid: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 								aiStatus === 'available'
 									? 'bg-purple-50 border-purple-300'
 									: aiStatus === 'unavailable'
-									? 'bg-orange-50 border-orange-300'
-									: 'bg-gray-50 border-gray-300'
+										? 'bg-orange-50 border-orange-300'
+										: 'bg-gray-50 border-gray-300'
 							}`}
 						>
 							<div className='flex items-center gap-2 mb-2'>
@@ -490,9 +641,9 @@ const ExamGradingHybrid: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 									/>
 								</label>
 
-								<button onClick={openCamera} className='btn-secondary'>
+								<button onClick={openCameraSystem} className='btn-secondary'>
 									<Camera className='w-5 h-5' />
-									Kamera
+									Kamera Tizimi
 								</button>
 							</div>
 						</div>

@@ -19,7 +19,9 @@ export default defineConfig({
 		},
 	},
 	server: {
-		port: 5173,
+		host: '0.0.0.0', // Tashqi qurilmalar uchun ochiq
+		port: 3000,
+		// Proxy faqat localhost uchun, telefon uchun to'g'ridan-to'g'ri API chaqiramiz
 		proxy: {
 			'/api': {
 				target: 'http://localhost:8000',

@@ -1,7 +1,6 @@
 import {
 	AlertTriangle,
 	ArrowLeft,
-	Camera,
 	CheckCircle,
 	FileDown,
 	FileImage,
@@ -18,7 +17,6 @@ import {
 import React, { useCallback, useRef, useState } from 'react'
 import { Exam, Toast as ToastType } from '../types'
 import { getAllAnswerKeys } from '../utils/storage'
-import CameraCaptureNew from './CameraCaptureNew'
 import Toast from './Toast'
 
 interface ExamGradingProps {
@@ -149,7 +147,6 @@ const ExamGrading: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 		[sheetId: string]: boolean
 	}>({})
 	const [toast, setToast] = useState<ToastType | null>(null)
-	const [showCamera, setShowCamera] = useState(false)
 	const [showDebug] = useState(true)
 	const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -180,7 +177,7 @@ const ExamGrading: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 				}
 			})
 		},
-		[]
+		[],
 	)
 	// Advanced OMR processing with full checking system implementation
 	const processSheet = async (sheet: UploadedSheet) => {
@@ -198,7 +195,7 @@ const ExamGrading: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 			const processedResult = await processAnswerSheetFull(
 				sheet.data,
 				exam,
-				processingLog
+				processingLog,
 			)
 
 			if (!processedResult.success) {
@@ -222,12 +219,12 @@ const ExamGrading: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 			}
 
 			setUploadedSheets(prev =>
-				prev.map(s => (s.id === sheet.id ? updatedSheet : s))
+				prev.map(s => (s.id === sheet.id ? updatedSheet : s)),
 			)
 
 			setToast({
 				message: `Varaq muvaffaqiyatli qayta ishlandi! (${duration.toFixed(
-					1
+					1,
 				)}s)`,
 				type: 'success',
 			})
@@ -272,36 +269,6 @@ const ExamGrading: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 
 	const removeSheet = (id: string) => {
 		setUploadedSheets(prev => prev.filter(sheet => sheet.id !== id))
-	}
-	const openCamera = () => {
-		setShowCamera(true)
-	}
-
-	const handleCameraCapture = (imageFile: File) => {
-		// Convert File to data URL
-		const reader = new FileReader()
-		reader.onload = e => {
-			const result = e.target?.result as string
-			const sheet: UploadedSheet = {
-				id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-				name: imageFile.name,
-				preview: result,
-				data: result,
-				processed: false,
-			}
-			setUploadedSheets(prev => [...prev, sheet])
-			setShowCamera(false)
-
-			setToast({
-				message: 'Rasm muvaffaqiyatli olindi!',
-				type: 'success',
-			})
-		}
-		reader.readAsDataURL(imageFile)
-	}
-
-	const closeCamera = () => {
-		setShowCamera(false)
 	}
 
 	const loadDemoSheets = () => {
@@ -396,15 +363,6 @@ const ExamGrading: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 			</header>
 
 			<main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-				{/* Camera Capture Component */}
-				{showCamera && (
-					<CameraCaptureNew
-						onCapture={handleCameraCapture}
-						onClose={closeCamera}
-						examStructure={exam}
-					/>
-				)}
-
 				{/* System Status Panel */}
 				<div className='bg-white rounded-xl border p-6 mb-8'>
 					<div className='flex items-center justify-between mb-4'>
@@ -536,11 +494,6 @@ const ExamGrading: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 									/>
 								</label>
 
-								<button onClick={openCamera} className='btn-secondary'>
-									<Camera className='w-5 h-5' />
-									Kamera
-								</button>
-
 								<button onClick={loadDemoSheets} className='btn-outline'>
 									<FileText className='w-5 h-5' />
 									Demo Varaqlar
@@ -579,10 +532,10 @@ const ExamGrading: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 														qualityScore > 95
 															? 'bg-green-500 text-white'
 															: qualityScore > 85
-															? 'bg-blue-500 text-white'
-															: qualityScore > 75
-															? 'bg-yellow-500 text-white'
-															: 'bg-red-500 text-white'
+																? 'bg-blue-500 text-white'
+																: qualityScore > 75
+																	? 'bg-yellow-500 text-white'
+																	: 'bg-red-500 text-white'
 													}`}
 												>
 													{qualityScore.toFixed(0)}%
@@ -898,10 +851,10 @@ const ExamGrading: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 																		q.warning
 																			? 'border-yellow-400 bg-yellow-50'
 																			: q.isCorrect
-																			? 'border-green-300 bg-green-50'
-																			: !q.studentAnswer
-																			? 'border-gray-300 bg-gray-50'
-																			: 'border-red-300 bg-red-50'
+																				? 'border-green-300 bg-green-50'
+																				: !q.studentAnswer
+																					? 'border-gray-300 bg-gray-50'
+																					: 'border-red-300 bg-red-50'
 																	} ${
 																		isVeryLowConfidence
 																			? 'ring-2 ring-orange-400'
@@ -946,12 +899,12 @@ const ExamGrading: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 																							q.confidence > 90
 																								? 'bg-green-500'
 																								: q.confidence > 80
-																								? 'bg-blue-500'
-																								: q.confidence > 70
-																								? 'bg-yellow-500'
-																								: q.confidence > 50
-																								? 'bg-orange-500'
-																								: 'bg-red-500'
+																									? 'bg-blue-500'
+																									: q.confidence > 70
+																										? 'bg-yellow-500'
+																										: q.confidence > 50
+																											? 'bg-orange-500'
+																											: 'bg-red-500'
 																						}`}
 																						style={{
 																							width: `${q.confidence}%`,
@@ -973,8 +926,8 @@ const ExamGrading: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 																						q.pointsEarned > 0
 																							? 'text-green-600'
 																							: q.pointsEarned < 0
-																							? 'text-red-600'
-																							: 'text-gray-600'
+																								? 'text-red-600'
+																								: 'text-gray-600'
 																					}`}
 																				>
 																					{q.pointsEarned > 0 ? '+' : ''}
@@ -999,8 +952,8 @@ const ExamGrading: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 																						q.warning === 'NO_MARK'
 																							? 'bg-gray-100 text-gray-700'
 																							: q.warning === 'MULTIPLE_MARKS'
-																							? 'bg-yellow-100 text-yellow-700'
-																							: 'bg-orange-100 text-orange-700'
+																								? 'bg-yellow-100 text-yellow-700'
+																								: 'bg-orange-100 text-orange-700'
 																					}`}
 																				>
 																					{q.warning === 'NO_MARK' &&
@@ -1069,7 +1022,7 @@ const ExamGrading: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 																					value={q.studentAnswer || ''}
 																					onChange={e => {
 																						console.log(
-																							`Question ${q.questionNumber} manually corrected to ${e.target.value}`
+																							`Question ${q.questionNumber} manually corrected to ${e.target.value}`,
 																						)
 																					}}
 																					className='border rounded px-2 py-1 text-sm'
@@ -1146,11 +1099,11 @@ const ExamGrading: React.FC<ExamGradingProps> = ({ exam, onBack }) => {
 async function processAnswerSheetFull(
 	imageData: string,
 	exam: Exam,
-	processingLog: string[]
+	processingLog: string[],
 ): Promise<ProcessedResult> {
 	processingLog.push('='.repeat(60))
 	processingLog.push(
-		'PROFESSIONAL OMR SYSTEM v3.0 - VARAQ TEKSHIRISH BOSHLANDI'
+		'PROFESSIONAL OMR SYSTEM v3.0 - VARAQ TEKSHIRISH BOSHLANDI',
 	)
 	processingLog.push('='.repeat(60))
 
@@ -1161,13 +1114,13 @@ async function processAnswerSheetFull(
 		processingLog.push('\n[1/6] RASM YUKLASH VA VALIDATSIYA')
 		const loadedImage = await loadImageFromDataUrl(imageData)
 		processingLog.push(
-			`✓ Rasm yuklandi: ${loadedImage.width}x${loadedImage.height}px`
+			`✓ Rasm yuklandi: ${loadedImage.width}x${loadedImage.height}px`,
 		)
 
 		// Validate image dimensions
 		if (loadedImage.width < 800 || loadedImage.height < 1100) {
 			throw new Error(
-				`Rasm o'lchami juda kichik. Minimal: 800x1100px. Sizniki: ${loadedImage.width}x${loadedImage.height}px`
+				`Rasm o'lchami juda kichik. Minimal: 800x1100px. Sizniki: ${loadedImage.width}x${loadedImage.height}px`,
 			)
 		}
 
@@ -1179,8 +1132,8 @@ async function processAnswerSheetFull(
 		if (Math.abs(aspectRatio - expectedRatio) > tolerance) {
 			processingLog.push(
 				`⚠ Ogohlantirish: Rasm A4 formatda emas. Kutilgan: ${expectedRatio.toFixed(
-					2
-				)}, Hozirgi: ${aspectRatio.toFixed(2)}`
+					2,
+				)}, Hozirgi: ${aspectRatio.toFixed(2)}`,
 			)
 		}
 
@@ -1188,14 +1141,14 @@ async function processAnswerSheetFull(
 		processingLog.push('\n[2/6] PROFESSIONAL PRE-PROCESSING')
 		const processed = await preprocessImageProfessional(
 			loadedImage,
-			processingLog
+			processingLog,
 		)
 
 		if (processed.quality.overall < 50) {
 			processingLog.push(
 				`⚠ Ogohlantirish: Rasm sifati past (${processed.quality.overall.toFixed(
-					1
-				)}%)`
+					1,
+				)}%)`,
 			)
 		}
 
@@ -1204,7 +1157,7 @@ async function processAnswerSheetFull(
 		const coordinates = calculateCoordinatesProfessional(
 			exam,
 			processed.dimensions,
-			processingLog
+			processingLog,
 		)
 
 		// 4. Professional Answer Detection
@@ -1213,7 +1166,7 @@ async function processAnswerSheetFull(
 			processed.processed,
 			coordinates,
 			exam,
-			processingLog
+			processingLog,
 		)
 
 		// 5. Answer Grading
@@ -1223,14 +1176,14 @@ async function processAnswerSheetFull(
 			detected.answers,
 			answerKey,
 			exam,
-			processingLog
+			processingLog,
 		)
 
 		// 6. Create Debug Visualization
 		const debugImage = createDebugVisualization(
 			processed.processed,
 			coordinates,
-			detected
+			detected,
 		)
 
 		const endTime = Date.now()
@@ -1242,7 +1195,7 @@ async function processAnswerSheetFull(
 			`📊 Aniqlik: ${(
 				(results.correctAnswers / results.totalQuestions) *
 				100
-			).toFixed(1)}%`
+			).toFixed(1)}%`,
 		)
 
 		return {
@@ -1262,7 +1215,7 @@ async function processAnswerSheetFull(
 		processingLog.push(
 			`\n❌ XATOLIK: ${
 				error instanceof Error ? error.message : "Noma'lum xatolik"
-			}`
+			}`,
 		)
 		return {
 			success: false,
@@ -1285,7 +1238,7 @@ function loadImageFromDataUrl(dataUrl: string): Promise<HTMLImageElement> {
 // Professional image preprocessing following full_checking_system.md
 async function preprocessImageProfessional(
 	image: HTMLImageElement,
-	log: string[]
+	log: string[],
 ): Promise<any> {
 	const targetWidth = 1240 // A4 @ 150 DPI
 	const targetHeight = 1754
@@ -1306,7 +1259,7 @@ async function preprocessImageProfessional(
 		ctx,
 		image.width,
 		image.height,
-		log
+		log,
 	)
 
 	if (!corners || corners.length !== 4) {
@@ -1326,7 +1279,7 @@ async function preprocessImageProfessional(
 	resizeCtx.imageSmoothingQuality = 'high'
 	resizeCtx.drawImage(originalCanvas, 0, 0, targetWidth, targetHeight)
 	log.push(
-		`  ✓ ${image.width}x${image.height} → ${targetWidth}x${targetHeight}`
+		`  ✓ ${image.width}x${image.height} → ${targetWidth}x${targetHeight}`,
 	)
 
 	// 4. Convert to grayscale (CRITICAL: No binarization!)
@@ -1348,14 +1301,14 @@ async function preprocessImageProfessional(
 	const quality = assessImageQualityProfessional(
 		resizeCtx,
 		targetWidth,
-		targetHeight
+		targetHeight,
 	)
 	log.push(
 		`  ✓ Rasm sifati: ${quality.overall.toFixed(
-			1
+			1,
 		)}% (Kontrast: ${quality.contrast.toFixed(
-			1
-		)}%, Sharpness: ${quality.sharpness.toFixed(1)}%)`
+			1,
+		)}%, Sharpness: ${quality.sharpness.toFixed(1)}%)`,
 	)
 
 	return {
@@ -1371,7 +1324,7 @@ function detectCornerMarkersProfessional(
 	ctx: CanvasRenderingContext2D,
 	width: number,
 	height: number,
-	log: string[]
+	log: string[],
 ): any[] | null {
 	const markerSize = Math.min(width, height) * 0.03 // 3% of image size
 	const searchArea = markerSize * 1.5
@@ -1390,7 +1343,7 @@ function detectCornerMarkersProfessional(
 			pos.x,
 			pos.y,
 			searchArea,
-			markerSize
+			markerSize,
 		)
 
 		if (marker) {
@@ -1414,7 +1367,7 @@ function findMarkerInAreaProfessional(
 	startX: number,
 	startY: number,
 	searchArea: number,
-	markerSize: number
+	markerSize: number,
 ) {
 	let bestMatch = null
 	let maxBlackRatio = 0
@@ -1427,7 +1380,7 @@ function findMarkerInAreaProfessional(
 				startX + x,
 				startY + y,
 				markerSize,
-				markerSize
+				markerSize,
 			)
 			const blackRatio = calculateBlackRatioProfessional(imageData)
 
@@ -1464,7 +1417,7 @@ function calculateBlackRatioProfessional(imageData: ImageData): number {
 function convertToGrayscaleProfessional(
 	ctx: CanvasRenderingContext2D,
 	width: number,
-	height: number
+	height: number,
 ) {
 	const imageData = ctx.getImageData(0, 0, width, height)
 	const data = imageData.data
@@ -1483,7 +1436,7 @@ function enhanceContrastProfessional(
 	ctx: CanvasRenderingContext2D,
 	width: number,
 	height: number,
-	factor: number
+	factor: number,
 ) {
 	const imageData = ctx.getImageData(0, 0, width, height)
 	const data = imageData.data
@@ -1503,7 +1456,7 @@ function enhanceContrastProfessional(
 function reduceNoiseProfessional(
 	ctx: CanvasRenderingContext2D,
 	width: number,
-	height: number
+	height: number,
 ) {
 	const imageData = ctx.getImageData(0, 0, width, height)
 	const data = imageData.data
@@ -1545,7 +1498,7 @@ function reduceNoiseProfessional(
 function assessImageQualityProfessional(
 	ctx: CanvasRenderingContext2D,
 	width: number,
-	height: number
+	height: number,
 ): ImageQuality {
 	const imageData = ctx.getImageData(0, 0, width, height)
 	const data = imageData.data
@@ -1591,7 +1544,7 @@ function assessImageQualityProfessional(
 function calculateCoordinatesProfessional(
 	exam: Exam,
 	dimensions: { width: number; height: number },
-	log: string[]
+	log: string[],
 ): { [questionNumber: number]: any } {
 	const coordinates: { [questionNumber: number]: any } = {}
 
@@ -1636,7 +1589,7 @@ function calculateCoordinatesProfessional(
 			log.push(
 				`      Bo'lim ${sectionIndex + 1}: ${section.name} (${
 					section.questionCount
-				} savol)`
+				} savol)`,
 			)
 
 			currentY += sectionLayout.sectionHeaderHeight
@@ -1658,7 +1611,7 @@ function calculateCoordinatesProfessional(
 						columnX,
 						rowY,
 						questionLayout,
-						mmToPx
+						mmToPx,
 					)
 
 					questionNumber++
@@ -1674,7 +1627,7 @@ function calculateCoordinatesProfessional(
 	})
 
 	log.push(
-		`  ✓ ${Object.keys(coordinates).length} ta savol koordinatalari hisoblandi`
+		`  ✓ ${Object.keys(coordinates).length} ta savol koordinatalari hisoblandi`,
 	)
 
 	return coordinates
@@ -1684,7 +1637,7 @@ function createQuestionCoordinatesProfessional(
 	x: number,
 	y: number,
 	layout: any,
-	mmToPx: number
+	mmToPx: number,
 ) {
 	const pxX = x * mmToPx
 	const pxY = y * mmToPx
@@ -1711,7 +1664,7 @@ async function detectAnswersProfessional(
 	canvas: HTMLCanvasElement,
 	coordinates: any,
 	exam: Exam,
-	log: string[]
+	log: string[],
 ): Promise<any> {
 	const ctx = canvas.getContext('2d')
 	if (!ctx) throw new Error('Canvas context not available')
@@ -1762,7 +1715,7 @@ async function detectAnswersProfessional(
 	})
 
 	log.push(
-		`  ✓ Professional OMR: ${detectedAnswers}/${totalQuestions} aniqlandi`
+		`  ✓ Professional OMR: ${detectedAnswers}/${totalQuestions} aniqlandi`,
 	)
 	log.push(`  ⚠ Past ishonch: ${lowConfidence}, Ko'p belgi: ${multipleMarks}`)
 
@@ -1781,7 +1734,7 @@ async function detectAnswersProfessional(
 function detectSingleQuestionProfessional(
 	ctx: CanvasRenderingContext2D,
 	coords: any,
-	_log: string[]
+	_log: string[],
 ): QuestionResult {
 	// 1. Analyze all variants with professional multi-parameter approach
 	const variantAnalyses = coords.bubbles.map((bubble: any) => {
@@ -1797,7 +1750,7 @@ function detectSingleQuestionProfessional(
 
 	// 2. Sort by final score (COMPARATIVE ANALYSIS - key improvement!)
 	const sorted = [...variantAnalyses].sort(
-		(a, b) => b.finalScore - a.finalScore
+		(a, b) => b.finalScore - a.finalScore,
 	)
 	const first = sorted[0]
 	const second = sorted[1]
@@ -1823,7 +1776,7 @@ function detectSingleQuestionProfessional(
 // Professional bubble analysis with 3-parameter scoring
 function analyzeBubbleProfessional(
 	ctx: CanvasRenderingContext2D,
-	bubble: any
+	bubble: any,
 ): BubbleAnalysis {
 	const radius = bubble.radius
 	const centerX = Math.round(bubble.x)
@@ -1846,19 +1799,19 @@ function analyzeBubbleProfessional(
 		imageData,
 		localCenterX,
 		localCenterY,
-		radius
+		radius,
 	)
 	const coverage = calculateCoverageProfessional(
 		imageData,
 		localCenterX,
 		localCenterY,
-		radius
+		radius,
 	)
 	const uniformity = calculateUniformityProfessional(
 		imageData,
 		localCenterX,
 		localCenterY,
-		radius
+		radius,
 	)
 
 	// WEIGHTED FINAL SCORE (as per full_checking_system.md)
@@ -1881,7 +1834,7 @@ function calculateDarknessProfessional(
 	imageData: ImageData,
 	centerX: number,
 	centerY: number,
-	radius: number
+	radius: number,
 ): number {
 	const data = imageData.data
 	const width = imageData.width
@@ -1920,7 +1873,7 @@ function calculateCoverageProfessional(
 	imageData: ImageData,
 	centerX: number,
 	centerY: number,
-	radius: number
+	radius: number,
 ): number {
 	const data = imageData.data
 	const width = imageData.width
@@ -1970,7 +1923,7 @@ function calculateUniformityProfessional(
 	imageData: ImageData,
 	centerX: number,
 	centerY: number,
-	radius: number
+	radius: number,
 ): number {
 	const data = imageData.data
 	const width = imageData.width
@@ -2009,7 +1962,7 @@ function calculateUniformityProfessional(
 function makeDecisionProfessional(
 	first: BubbleAnalysis,
 	second: BubbleAnalysis,
-	_allVariants: BubbleAnalysis[]
+	_allVariants: BubbleAnalysis[],
 ) {
 	const decision = {
 		answer: null as string | null,
@@ -2067,7 +2020,7 @@ function gradeAnswersProfessional(
 	detectedAnswers: any,
 	answerKey: { [questionNumber: number]: string },
 	exam: Exam,
-	log: string[]
+	log: string[],
 ): GradingResult {
 	log.push('  → Professional grading boshlandi')
 
@@ -2191,12 +2144,12 @@ function gradeAnswersProfessional(
 	}
 
 	log.push(
-		`  ✓ To'g'ri: ${results.correctAnswers}, Noto'g'ri: ${results.incorrectAnswers}, Javobsiz: ${results.unanswered}`
+		`  ✓ To'g'ri: ${results.correctAnswers}, Noto'g'ri: ${results.incorrectAnswers}, Javobsiz: ${results.unanswered}`,
 	)
 	log.push(
 		`  📊 Ball: ${results.totalScore}/${
 			results.maxScore
-		} (${results.percentage.toFixed(1)}%)`
+		} (${results.percentage.toFixed(1)}%)`,
 	)
 	log.push(`  🎓 Baho: ${results.grade.numeric} (${results.grade.text})`)
 
@@ -2256,7 +2209,7 @@ function convertDetectedToSimpleAnswers(detectedAnswers: any): {
 function createDebugVisualization(
 	canvas: HTMLCanvasElement,
 	coordinates: any,
-	detected: any
+	detected: any,
 ): string {
 	const debugCanvas = document.createElement('canvas')
 	debugCanvas.width = canvas.width
@@ -2305,14 +2258,14 @@ function createDebugVisualization(
 				ctx.fillText(
 					`${answer.confidence}%`,
 					bubble.x + bubble.radius + 5,
-					bubble.y + 5
+					bubble.y + 5,
 				)
 			}
 
 			// Variant scores
 			if (answer.allScores) {
 				const variantScore = answer.allScores.find(
-					(s: any) => s.variant === bubble.variant
+					(s: any) => s.variant === bubble.variant,
 				)
 				if (variantScore) {
 					ctx.fillStyle = '#666'
@@ -2320,7 +2273,7 @@ function createDebugVisualization(
 					ctx.fillText(
 						variantScore.finalScore.toFixed(0),
 						bubble.x - 5,
-						bubble.y - bubble.radius - 5
+						bubble.y - bubble.radius - 5,
 					)
 				}
 			}

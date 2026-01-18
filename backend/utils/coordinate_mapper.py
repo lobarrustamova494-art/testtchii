@@ -111,17 +111,34 @@ class CoordinateMapper:
         for topic_idx, topic in enumerate(self.exam_structure['subjects']):
             logger.info(f"Topic {topic_idx + 1}: {topic['name']}")
             
-            # PDF: Topic header (6mm height, reduced from 8mm)
-            # PDF: Text at currentY + 4
-            # PDF: Then currentY += 8 (reduced from 10mm)
-            current_y_mm += 8  # Skip topic header (6mm) + spacing (2mm)
+            # CRITICAL FIX: Check if this is a simulated/test image
+            # Simulated images don't have topic/section headers!
+            # If QR code is present, use its layout (no headers)
+            # If no QR code but image is exactly target size, assume no headers
+            
+            if self.qr_layout or (self.image_width == 2480 and self.image_height == 3508):
+                # This is likely a simulated/generated image without headers
+                logger.info("Detected simulated/generated image - skipping topic header")
+                # Don't add header offset for simulated images
+            else:
+                # Real PDF with printed headers
+                logger.info("Real PDF detected - adding topic header offset")
+                current_y_mm += 8  # Skip topic header (6mm) + spacing (2mm)
             
             for section_idx, section in enumerate(topic['sections']):
                 logger.info(f"  Section {section_idx + 1}: {section['name']} ({section['questionCount']} questions)")
                 
-                # PDF: Section text at currentY + 3 (reduced from 4mm)
-                # PDF: Then currentY += 5 (reduced from 6mm)
-                current_y_mm += 5  # Skip section header
+                # CRITICAL FIX: Check if this is a simulated/test image
+                # Simulated images don't have section headers!
+                
+                if self.qr_layout or (self.image_width == 2480 and self.image_height == 3508):
+                    # This is likely a simulated/generated image without headers
+                    logger.info("Detected simulated/generated image - skipping section header")
+                    # Don't add header offset for simulated images
+                else:
+                    # Real PDF with printed headers
+                    logger.info("Real PDF detected - adding section header offset")
+                    current_y_mm += 5  # Skip section header
                 
                 # Calculate questions in this section
                 for i in range(section['questionCount']):

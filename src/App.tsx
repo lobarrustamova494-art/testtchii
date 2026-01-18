@@ -5,8 +5,8 @@ import ExamCreation from './components/ExamCreation'
 import ExamGradingHybrid from './components/ExamGradingHybrid'
 import ExamPreview from './components/ExamPreview'
 import Login from './components/Login'
+import { authApi } from './services/authApi'
 import { Exam, User, ViewType } from './types'
-import { storage } from './utils/storage'
 
 const App: React.FC = () => {
 	const [currentUser, setCurrentUser] = useState<User | null>(null)
@@ -15,12 +15,36 @@ const App: React.FC = () => {
 	const [loading, setLoading] = useState(true)
 
 	useEffect(() => {
-		// Check for existing user session
-		const user = storage.get<User>('currentUser')
-		if (user) {
-			setCurrentUser(user)
+		// Check for existing JWT token and user session
+		const initAuth = async () => {
+			if (authApi.isAuthenticated()) {
+				try {
+					// Verify token is still valid
+					const tokenData = await authApi.verifyToken()
+					if (tokenData.valid) {
+						// Convert authApi user to app user format
+						const user: User = {
+							id: tokenData.user.username,
+							name: tokenData.user.full_name,
+							email: tokenData.user.email,
+							password: '',
+							role: tokenData.user.role as 'admin' | 'teacher',
+						}
+						setCurrentUser(user)
+					} else {
+						// Token invalid, clear auth
+						authApi.removeToken()
+					}
+				} catch (error) {
+					// Token verification failed (expired or invalid) - this is normal
+					// Just clear the token silently
+					authApi.removeToken()
+				}
+			}
+			setLoading(false)
 		}
-		setLoading(false)
+
+		initAuth()
 	}, [])
 
 	const handleLogin = (user: User) => {
@@ -28,8 +52,12 @@ const App: React.FC = () => {
 		setCurrentView('dashboard')
 	}
 
-	const handleLogout = () => {
-		storage.remove('currentUser')
+	const handleLogout = async () => {
+		try {
+			await authApi.logout()
+		} catch (error) {
+			console.warn('Logout request failed:', error)
+		}
 		setCurrentUser(null)
 		setCurrentView('dashboard')
 		setSelectedExam(null)

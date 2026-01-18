@@ -28,6 +28,7 @@ class ImageProcessor:
                 'original': np.ndarray,
                 'processed': np.ndarray,
                 'grayscale': np.ndarray,
+                'gray_for_omr': np.ndarray,  # PURE grayscale for OMR
                 'corners': list,
                 'quality': dict,
                 'dimensions': dict
@@ -42,6 +43,34 @@ class ImageProcessor:
         
         original = image.copy()
         logger.info(f"Image loaded: {image.shape[1]}x{image.shape[0]}")
+        
+        # CRITICAL: If image is already correct size, skip processing!
+        # This preserves original quality for OMR detection
+        if image.shape[1] == self.target_width and image.shape[0] == self.target_height:
+            logger.info("Image already correct size - skipping perspective correction")
+            
+            # Just convert to grayscale
+            gray_for_omr = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            gray_enhanced = gray_for_omr.copy()
+            
+            # Default corners
+            corners = self._get_default_corners(image)
+            
+            # Quality assessment
+            quality = self.assess_quality(gray_for_omr)
+            
+            return {
+                'original': original,
+                'processed': gray_for_omr,  # No processing needed
+                'grayscale': gray_enhanced,
+                'gray_for_omr': gray_for_omr,  # PURE grayscale
+                'corners': corners,
+                'quality': quality,
+                'dimensions': {
+                    'width': self.target_width,
+                    'height': self.target_height
+                }
+            }
         
         # 2. Corner markers aniqlash
         logger.info("Detecting corner markers...")
@@ -78,15 +107,20 @@ class ImageProcessor:
         logger.info("Converting to grayscale...")
         gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
         
-        # 5.5. Enhance grayscale for better annotation quality
+        # CRITICAL: Keep PURE grayscale for OMR detection (no enhancement!)
+        # OMR detection works best on pure grayscale
+        gray_for_omr = gray.copy()
+        
+        # 5.5. Enhance grayscale for better annotation quality ONLY
         logger.info("Enhancing grayscale for annotation...")
-        # Apply CLAHE for better contrast
+        # Apply CLAHE for better contrast (for annotation, not OMR!)
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
         gray_enhanced = clahe.apply(gray)
         
         # 6. Adaptive thresholding (CRITICAL!)
         logger.info("Applying adaptive thresholding...")
-        # Use larger block size for better handling of lighting variations
+        # CRITICAL FIX: Use GRAYSCALE for OMR detection, not thresholded!
+        # Thresholded image is only for visualization/annotation
         processed = cv2.adaptiveThreshold(
             gray,
             255,
@@ -95,6 +129,9 @@ class ImageProcessor:
             15,  # Increased block size from 11 to 15
             3    # Increased C constant from 2 to 3
         )
+        
+        # CRITICAL: Keep original grayscale for OMR detection
+        # OMR detector works MUCH better on grayscale than binary!
         
         # 7. Noise reduction with bilateral filter (preserves edges better)
         logger.info("Reducing noise...")
@@ -110,21 +147,38 @@ class ImageProcessor:
         clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))  # Increased clipLimit
         enhanced = clahe.apply(denoised)
         
-        # 9. Final sharpening to improve bubble detection
+        # 9. Gamma correction for light marks detection (NEW!)
+        logger.info("Applying gamma correction for light marks...")
+        gamma = 0.8  # Brighten the image to detect light marks better
+        gamma_corrected = np.power(enhanced / 255.0, gamma) * 255.0
+        gamma_corrected = gamma_corrected.astype(np.uint8)
+        
+        # 10. Final sharpening to improve bubble detection
         logger.info("Sharpening image...")
         kernel_sharpen = np.array([[-1,-1,-1],
                                    [-1, 9,-1],
                                    [-1,-1,-1]])
-        sharpened = cv2.filter2D(enhanced, -1, kernel_sharpen)
+        sharpened = cv2.filter2D(gamma_corrected, -1, kernel_sharpen)
         
-        # 10. Quality assessment
-        quality = self.assess_quality(sharpened)
+        # 11. Additional light mark enhancement
+        logger.info("Enhancing light marks...")
+        # Create a mask for potential light marks
+        light_mask = cv2.inRange(sharpened, 180, 220)  # Light gray areas
+        
+        # Darken light marks slightly
+        light_enhanced = sharpened.copy()
+        light_enhanced[light_mask > 0] = light_enhanced[light_mask > 0] * 0.85
+        light_enhanced = light_enhanced.astype(np.uint8)
+        
+        # 12. Quality assessment
+        quality = self.assess_quality(light_enhanced)
         logger.info(f"Image quality: {quality['overall']:.1f}%")
         
         return {
             'original': original,
-            'processed': sharpened,  # Use sharpened image for OMR detection
+            'processed': light_enhanced,  # Use light-enhanced image for OMR detection
             'grayscale': gray_enhanced,  # Use enhanced grayscale for annotation
+            'gray_for_omr': gray_for_omr,  # CRITICAL: Original grayscale for OMR detection
             'corners': corners,
             'quality': quality,
             'dimensions': {
@@ -152,13 +206,22 @@ class ImageProcessor:
         
         logger.info(f"Expected marker size: {expected_size:.1f} px")
         
-        # VERY STRICT thresholding
-        _, binary = cv2.threshold(gray, 80, 255, cv2.THRESH_BINARY_INV)
+        # VERY STRICT thresholding - IMPROVED
+        # Use Otsu's method for better automatic thresholding
+        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
         
-        # Morphological operations
-        kernel = np.ones((3, 3), np.uint8)
+        # Additional manual threshold for very light images
+        if np.mean(binary) < 10:  # If too few black pixels
+            _, binary = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY_INV)  # Lower threshold
+        
+        # IMPROVED: More aggressive morphological operations
+        kernel = np.ones((5, 5), np.uint8)  # Larger kernel
         binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel)
         binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
+        
+        # Additional: Remove small noise
+        kernel_small = np.ones((3, 3), np.uint8)
+        binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel_small)
         
         # Find contours
         contours, _ = cv2.findContours(

@@ -19,14 +19,13 @@ class ImageAnnotator:
     COLOR_CORRECT_ANSWER = (0, 255, 0)      # Yashil - to'g'ri javob
     COLOR_STUDENT_CORRECT = (255, 128, 0)   # Ko'k - o'quvchi to'g'ri belgilagan
     COLOR_STUDENT_WRONG = (0, 0, 255)       # Qizil - o'quvchi xato belgilagan
-    COLOR_NO_ANSWER = (128, 128, 128)       # Kulrang - javob yo'q
     
-    THICKNESS = 2  # Thinner lines - bubble o'lchamiga mos
-    PADDING = 0    # NO PADDING - bubble o'lchamiga teng
+    THICKNESS = 2  # Rectangle thickness (reduced for precision)
+    PADDING = 0    # No padding - exact bubble size
     
-    # NO OFFSET - Coordinates should be accurate from coordinate_mapper
-    X_OFFSET = 0  # No horizontal offset
-    Y_OFFSET = 0  # No vertical offset
+    # NO OFFSET - Coordinates should be accurate
+    X_OFFSET = 0
+    Y_OFFSET = 0
     
     def __init__(self):
         pass
@@ -40,31 +39,22 @@ class ImageAnnotator:
     ) -> str:
         """
         Varaqni annotate qilish va base64 string qaytarish
-        
-        Args:
-            image: Original grayscale image
-            grading_results: Grading results from grader
-            coordinates: Question coordinates
-            answer_key: Correct answers
-            
-        Returns:
-            str: Base64 encoded annotated image
         """
         logger.info("Starting image annotation...")
         
-        # CRITICAL: Ensure we have a BGR image for colored annotations
-        # The input image should be grayscale (processed image from OMR detection)
+        # Convert to BGR for colored annotations
         if len(image.shape) == 2:
-            # Grayscale → BGR
             annotated = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
         else:
-            # Already BGR
             annotated = image.copy()
         
-        logger.info(f"Annotation image shape: {annotated.shape}, dtype: {annotated.dtype}")
+        logger.info(f"Annotation image shape: {annotated.shape}")
         
         # Annotate each question
         total_annotated = 0
+        no_answer_count = 0
+        correct_count = 0
+        wrong_count = 0
         
         # Use topicResults from grading_results
         for topic_data in grading_results.get('topicResults', []):
@@ -76,12 +66,20 @@ class ImageAnnotator:
                         logger.warning(f"Coordinates not found for Q{q_num}")
                         continue
                     
-                    # Get answers from question result
+                    # Get answers
                     correct_answer = question.get('correctAnswer')
                     student_answer = question.get('studentAnswer')
                     is_correct = question.get('isCorrect', False)
                     
-                    # Annotate bubbles
+                    # Count
+                    if student_answer is None or student_answer == '':
+                        no_answer_count += 1
+                    elif is_correct:
+                        correct_count += 1
+                    else:
+                        wrong_count += 1
+                    
+                    # Annotate
                     self._annotate_question(
                         annotated,
                         coordinates[q_num],
@@ -92,7 +90,7 @@ class ImageAnnotator:
                     
                     total_annotated += 1
         
-        logger.info(f"Annotated {total_annotated} questions")
+        logger.info(f"Annotated {total_annotated} questions: {correct_count} correct, {wrong_count} wrong, {no_answer_count} no answer")
         
         # Convert to base64
         _, buffer = cv2.imencode('.jpg', annotated, [cv2.IMWRITE_JPEG_QUALITY, 90])

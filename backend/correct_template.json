@@ -1,0 +1,1051 @@
+{
+  "version": "2.0",
+  "timestamp": "2026-01-17T12:00:00Z",
+  "cornerMarkers": {
+    "topLeft": {
+      "x": 12.5,
+      "y": 12.5
+    },
+    "topRight": {
+      "x": 197.5,
+      "y": 12.5
+    },
+    "bottomLeft": {
+      "x": 12.5,
+      "y": 284.5
+    },
+    "bottomRight": {
+      "x": 197.5,
+      "y": 284.5
+    }
+  },
+  "layout": {
+    "paperWidth": 210,
+    "paperHeight": 297,
+    "questionsPerRow": 2,
+    "bubbleSpacing": 8,
+    "bubbleRadius": 2.5,
+    "rowHeight": 5.5,
+    "gridStartX": 25,
+    "gridStartY": 149,
+    "questionSpacing": 90,
+    "firstBubbleOffset": 8
+  },
+  "questions": {
+    "1": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.15714285714285714,
+          "relativeY": 0.5084175084175084
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.19523809523809524,
+          "relativeY": 0.5084175084175084
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.23333333333333334,
+          "relativeY": 0.5084175084175084
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.2714285714285714,
+          "relativeY": 0.5084175084175084
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.30952380952380953,
+          "relativeY": 0.5084175084175084
+        }
+      ]
+    },
+    "2": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.5857142857142857,
+          "relativeY": 0.5084175084175084
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.6238095238095238,
+          "relativeY": 0.5084175084175084
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.6619047619047619,
+          "relativeY": 0.5084175084175084
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.7,
+          "relativeY": 0.5084175084175084
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.7380952380952381,
+          "relativeY": 0.5084175084175084
+        }
+      ]
+    },
+    "3": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.15714285714285714,
+          "relativeY": 0.5269360269360269
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.19523809523809524,
+          "relativeY": 0.5269360269360269
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.23333333333333334,
+          "relativeY": 0.5269360269360269
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.2714285714285714,
+          "relativeY": 0.5269360269360269
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.30952380952380953,
+          "relativeY": 0.5269360269360269
+        }
+      ]
+    },
+    "4": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.5857142857142857,
+          "relativeY": 0.5269360269360269
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.6238095238095238,
+          "relativeY": 0.5269360269360269
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.6619047619047619,
+          "relativeY": 0.5269360269360269
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.7,
+          "relativeY": 0.5269360269360269
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.7380952380952381,
+          "relativeY": 0.5269360269360269
+        }
+      ]
+    },
+    "5": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.15714285714285714,
+          "relativeY": 0.5454545454545454
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.19523809523809524,
+          "relativeY": 0.5454545454545454
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.23333333333333334,
+          "relativeY": 0.5454545454545454
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.2714285714285714,
+          "relativeY": 0.5454545454545454
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.30952380952380953,
+          "relativeY": 0.5454545454545454
+        }
+      ]
+    },
+    "6": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.5857142857142857,
+          "relativeY": 0.5454545454545454
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.6238095238095238,
+          "relativeY": 0.5454545454545454
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.6619047619047619,
+          "relativeY": 0.5454545454545454
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.7,
+          "relativeY": 0.5454545454545454
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.7380952380952381,
+          "relativeY": 0.5454545454545454
+        }
+      ]
+    },
+    "7": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.15714285714285714,
+          "relativeY": 0.563973063973064
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.19523809523809524,
+          "relativeY": 0.563973063973064
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.23333333333333334,
+          "relativeY": 0.563973063973064
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.2714285714285714,
+          "relativeY": 0.563973063973064
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.30952380952380953,
+          "relativeY": 0.563973063973064
+        }
+      ]
+    },
+    "8": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.5857142857142857,
+          "relativeY": 0.563973063973064
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.6238095238095238,
+          "relativeY": 0.563973063973064
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.6619047619047619,
+          "relativeY": 0.563973063973064
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.7,
+          "relativeY": 0.563973063973064
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.7380952380952381,
+          "relativeY": 0.563973063973064
+        }
+      ]
+    },
+    "9": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.15714285714285714,
+          "relativeY": 0.5824915824915825
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.19523809523809524,
+          "relativeY": 0.5824915824915825
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.23333333333333334,
+          "relativeY": 0.5824915824915825
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.2714285714285714,
+          "relativeY": 0.5824915824915825
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.30952380952380953,
+          "relativeY": 0.5824915824915825
+        }
+      ]
+    },
+    "10": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.5857142857142857,
+          "relativeY": 0.5824915824915825
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.6238095238095238,
+          "relativeY": 0.5824915824915825
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.6619047619047619,
+          "relativeY": 0.5824915824915825
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.7,
+          "relativeY": 0.5824915824915825
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.7380952380952381,
+          "relativeY": 0.5824915824915825
+        }
+      ]
+    },
+    "11": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.15714285714285714,
+          "relativeY": 0.601010101010101
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.19523809523809524,
+          "relativeY": 0.601010101010101
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.23333333333333334,
+          "relativeY": 0.601010101010101
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.2714285714285714,
+          "relativeY": 0.601010101010101
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.30952380952380953,
+          "relativeY": 0.601010101010101
+        }
+      ]
+    },
+    "12": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.5857142857142857,
+          "relativeY": 0.601010101010101
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.6238095238095238,
+          "relativeY": 0.601010101010101
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.6619047619047619,
+          "relativeY": 0.601010101010101
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.7,
+          "relativeY": 0.601010101010101
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.7380952380952381,
+          "relativeY": 0.601010101010101
+        }
+      ]
+    },
+    "13": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.15714285714285714,
+          "relativeY": 0.6195286195286195
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.19523809523809524,
+          "relativeY": 0.6195286195286195
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.23333333333333334,
+          "relativeY": 0.6195286195286195
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.2714285714285714,
+          "relativeY": 0.6195286195286195
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.30952380952380953,
+          "relativeY": 0.6195286195286195
+        }
+      ]
+    },
+    "14": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.5857142857142857,
+          "relativeY": 0.6195286195286195
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.6238095238095238,
+          "relativeY": 0.6195286195286195
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.6619047619047619,
+          "relativeY": 0.6195286195286195
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.7,
+          "relativeY": 0.6195286195286195
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.7380952380952381,
+          "relativeY": 0.6195286195286195
+        }
+      ]
+    },
+    "15": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.15714285714285714,
+          "relativeY": 0.6380471380471381
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.19523809523809524,
+          "relativeY": 0.6380471380471381
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.23333333333333334,
+          "relativeY": 0.6380471380471381
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.2714285714285714,
+          "relativeY": 0.6380471380471381
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.30952380952380953,
+          "relativeY": 0.6380471380471381
+        }
+      ]
+    },
+    "16": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.5857142857142857,
+          "relativeY": 0.6380471380471381
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.6238095238095238,
+          "relativeY": 0.6380471380471381
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.6619047619047619,
+          "relativeY": 0.6380471380471381
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.7,
+          "relativeY": 0.6380471380471381
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.7380952380952381,
+          "relativeY": 0.6380471380471381
+        }
+      ]
+    },
+    "17": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.15714285714285714,
+          "relativeY": 0.6565656565656566
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.19523809523809524,
+          "relativeY": 0.6565656565656566
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.23333333333333334,
+          "relativeY": 0.6565656565656566
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.2714285714285714,
+          "relativeY": 0.6565656565656566
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.30952380952380953,
+          "relativeY": 0.6565656565656566
+        }
+      ]
+    },
+    "18": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.5857142857142857,
+          "relativeY": 0.6565656565656566
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.6238095238095238,
+          "relativeY": 0.6565656565656566
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.6619047619047619,
+          "relativeY": 0.6565656565656566
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.7,
+          "relativeY": 0.6565656565656566
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.7380952380952381,
+          "relativeY": 0.6565656565656566
+        }
+      ]
+    },
+    "19": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.15714285714285714,
+          "relativeY": 0.6750841750841751
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.19523809523809524,
+          "relativeY": 0.6750841750841751
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.23333333333333334,
+          "relativeY": 0.6750841750841751
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.2714285714285714,
+          "relativeY": 0.6750841750841751
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.30952380952380953,
+          "relativeY": 0.6750841750841751
+        }
+      ]
+    },
+    "20": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.5857142857142857,
+          "relativeY": 0.6750841750841751
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.6238095238095238,
+          "relativeY": 0.6750841750841751
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.6619047619047619,
+          "relativeY": 0.6750841750841751
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.7,
+          "relativeY": 0.6750841750841751
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.7380952380952381,
+          "relativeY": 0.6750841750841751
+        }
+      ]
+    },
+    "21": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.15714285714285714,
+          "relativeY": 0.6936026936026936
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.19523809523809524,
+          "relativeY": 0.6936026936026936
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.23333333333333334,
+          "relativeY": 0.6936026936026936
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.2714285714285714,
+          "relativeY": 0.6936026936026936
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.30952380952380953,
+          "relativeY": 0.6936026936026936
+        }
+      ]
+    },
+    "22": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.5857142857142857,
+          "relativeY": 0.6936026936026936
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.6238095238095238,
+          "relativeY": 0.6936026936026936
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.6619047619047619,
+          "relativeY": 0.6936026936026936
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.7,
+          "relativeY": 0.6936026936026936
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.7380952380952381,
+          "relativeY": 0.6936026936026936
+        }
+      ]
+    },
+    "23": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.15714285714285714,
+          "relativeY": 0.7121212121212122
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.19523809523809524,
+          "relativeY": 0.7121212121212122
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.23333333333333334,
+          "relativeY": 0.7121212121212122
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.2714285714285714,
+          "relativeY": 0.7121212121212122
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.30952380952380953,
+          "relativeY": 0.7121212121212122
+        }
+      ]
+    },
+    "24": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.5857142857142857,
+          "relativeY": 0.7121212121212122
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.6238095238095238,
+          "relativeY": 0.7121212121212122
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.6619047619047619,
+          "relativeY": 0.7121212121212122
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.7,
+          "relativeY": 0.7121212121212122
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.7380952380952381,
+          "relativeY": 0.7121212121212122
+        }
+      ]
+    },
+    "25": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.15714285714285714,
+          "relativeY": 0.7306397306397306
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.19523809523809524,
+          "relativeY": 0.7306397306397306
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.23333333333333334,
+          "relativeY": 0.7306397306397306
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.2714285714285714,
+          "relativeY": 0.7306397306397306
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.30952380952380953,
+          "relativeY": 0.7306397306397306
+        }
+      ]
+    },
+    "26": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.5857142857142857,
+          "relativeY": 0.7306397306397306
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.6238095238095238,
+          "relativeY": 0.7306397306397306
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.6619047619047619,
+          "relativeY": 0.7306397306397306
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.7,
+          "relativeY": 0.7306397306397306
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.7380952380952381,
+          "relativeY": 0.7306397306397306
+        }
+      ]
+    },
+    "27": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.15714285714285714,
+          "relativeY": 0.7491582491582491
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.19523809523809524,
+          "relativeY": 0.7491582491582491
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.23333333333333334,
+          "relativeY": 0.7491582491582491
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.2714285714285714,
+          "relativeY": 0.7491582491582491
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.30952380952380953,
+          "relativeY": 0.7491582491582491
+        }
+      ]
+    },
+    "28": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.5857142857142857,
+          "relativeY": 0.7491582491582491
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.6238095238095238,
+          "relativeY": 0.7491582491582491
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.6619047619047619,
+          "relativeY": 0.7491582491582491
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.7,
+          "relativeY": 0.7491582491582491
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.7380952380952381,
+          "relativeY": 0.7491582491582491
+        }
+      ]
+    },
+    "29": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.15714285714285714,
+          "relativeY": 0.7676767676767676
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.19523809523809524,
+          "relativeY": 0.7676767676767676
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.23333333333333334,
+          "relativeY": 0.7676767676767676
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.2714285714285714,
+          "relativeY": 0.7676767676767676
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.30952380952380953,
+          "relativeY": 0.7676767676767676
+        }
+      ]
+    },
+    "30": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.5857142857142857,
+          "relativeY": 0.7676767676767676
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.6238095238095238,
+          "relativeY": 0.7676767676767676
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.6619047619047619,
+          "relativeY": 0.7676767676767676
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.7,
+          "relativeY": 0.7676767676767676
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.7380952380952381,
+          "relativeY": 0.7676767676767676
+        }
+      ]
+    },
+    "31": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.15714285714285714,
+          "relativeY": 0.7861952861952862
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.19523809523809524,
+          "relativeY": 0.7861952861952862
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.23333333333333334,
+          "relativeY": 0.7861952861952862
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.2714285714285714,
+          "relativeY": 0.7861952861952862
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.30952380952380953,
+          "relativeY": 0.7861952861952862
+        }
+      ]
+    },
+    "32": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.5857142857142857,
+          "relativeY": 0.7861952861952862
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.6238095238095238,
+          "relativeY": 0.7861952861952862
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.6619047619047619,
+          "relativeY": 0.7861952861952862
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.7,
+          "relativeY": 0.7861952861952862
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.7380952380952381,
+          "relativeY": 0.7861952861952862
+        }
+      ]
+    },
+    "33": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.15714285714285714,
+          "relativeY": 0.8047138047138047
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.19523809523809524,
+          "relativeY": 0.8047138047138047
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.23333333333333334,
+          "relativeY": 0.8047138047138047
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.2714285714285714,
+          "relativeY": 0.8047138047138047
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.30952380952380953,
+          "relativeY": 0.8047138047138047
+        }
+      ]
+    },
+    "34": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.5857142857142857,
+          "relativeY": 0.8047138047138047
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.6238095238095238,
+          "relativeY": 0.8047138047138047
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.6619047619047619,
+          "relativeY": 0.8047138047138047
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.7,
+          "relativeY": 0.8047138047138047
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.7380952380952381,
+          "relativeY": 0.8047138047138047
+        }
+      ]
+    },
+    "35": {
+      "bubbles": [
+        {
+          "variant": "A",
+          "relativeX": 0.15714285714285714,
+          "relativeY": 0.8232323232323232
+        },
+        {
+          "variant": "B",
+          "relativeX": 0.19523809523809524,
+          "relativeY": 0.8232323232323232
+        },
+        {
+          "variant": "C",
+          "relativeX": 0.23333333333333334,
+          "relativeY": 0.8232323232323232
+        },
+        {
+          "variant": "D",
+          "relativeX": 0.2714285714285714,
+          "relativeY": 0.8232323232323232
+        },
+        {
+          "variant": "E",
+          "relativeX": 0.30952380952380953,
+          "relativeY": 0.8232323232323232
+        }
+      ]
+    }
+  }
+}

@@ -20,7 +20,7 @@ const pdfConfig = {
  */
 export const generateExamPDF = async (
 	exam: Exam,
-	setNumber: number = 1
+	setNumber: number = 1,
 ): Promise<jsPDF> => {
 	const doc = new jsPDF(pdfConfig)
 
@@ -50,7 +50,7 @@ export const generateExamPDF = async (
 async function addQRCodeToSheet(
 	pdf: jsPDF,
 	exam: Exam,
-	setNumber: number
+	setNumber: number,
 ): Promise<void> {
 	// Prepare layout data for QR code
 	const layoutData = {
@@ -75,9 +75,9 @@ async function addQRCodeToSheet(
 					sum +
 					subject.sections.reduce(
 						(sectionSum, section) => sectionSum + section.questionCount,
-						0
+						0,
 					),
-				0
+				0,
 			),
 			subjects: exam.subjects.map(subject => ({
 				id: subject.id,
@@ -147,7 +147,7 @@ function drawHeader(
 	pdf: jsPDF,
 	exam: Exam,
 	setNumber: number,
-	startY: number
+	startY: number,
 ): number {
 	let currentY = startY
 
@@ -180,7 +180,7 @@ function drawHeader(
 }
 
 /**
- * Draw student info section with corrected ID grid
+ * Draw student info section (without ID grid)
  */
 function drawStudentInfo(pdf: jsPDF, startY: number): number {
 	let currentY = startY
@@ -223,54 +223,9 @@ function drawStudentInfo(pdf: jsPDF, startY: number): number {
 	pdf.line(158, currentY + 5, 195, currentY + 5)
 	currentY += 10
 
-	// TALABA ID - corrected grid
-	pdf.setFontSize(9)
-	pdf.setFont('helvetica', 'bold')
-	pdf.text('TALABA ID:', 18, currentY + 3)
-
-	// Draw corrected ID grid
-	drawCorrectedIDGrid(pdf, 50, currentY + 5)
-
-	currentY += 48 // Grid height + spacing
+	// TALABA ID qismi o'chirildi - faqat javoblar qismi qoldirildi
 
 	return currentY
-}
-
-/**
- * Draw corrected ID grid according to fix_student_id.md
- */
-function drawCorrectedIDGrid(pdf: jsPDF, startX: number, startY: number): void {
-	// Grid parameters from fix_student_id.md
-	const columnSpacing = 14 // 14mm between columns
-	const rowHeight = 4 // 4mm between rows
-	const bubbleRadius = 1.8 // 1.8mm radius
-
-	// Column numbers (0-9) at the top
-	pdf.setFontSize(8)
-	pdf.setFont('helvetica', 'normal')
-	for (let col = 0; col < 10; col++) {
-		const x = startX + col * columnSpacing
-		pdf.text(String(col), x + 0.5, startY - 1)
-	}
-
-	// Row numbers (0-9) on the left
-	for (let row = 0; row < 10; row++) {
-		const y = startY + row * rowHeight
-		pdf.text(String(row), startX - 8, y + 1.5)
-	}
-
-	// Bubble grid
-	for (let col = 0; col < 10; col++) {
-		for (let row = 0; row < 10; row++) {
-			const x = startX + col * columnSpacing + 2
-			const y = startY + row * rowHeight + 1
-
-			// Draw bubble
-			pdf.setDrawColor(120, 120, 120)
-			pdf.setLineWidth(0.2)
-			pdf.circle(x, y, bubbleRadius)
-		}
-	}
 }
 
 /**
@@ -326,7 +281,7 @@ function drawAnswerGrid(pdf: jsPDF, exam: Exam, startY: number): number {
 
 		const topicTotalScore = subject.sections.reduce(
 			(sum, section) => sum + section.questionCount * section.correctScore,
-			0
+			0,
 		)
 
 		pdf.setFontSize(10) // Reduced from 11
@@ -343,12 +298,12 @@ function drawAnswerGrid(pdf: jsPDF, exam: Exam, startY: number): number {
 			pdf.text(
 				`Bo'lim ${topicIndex + 1}.${sectionIndex + 1}: ${section.name}`,
 				20,
-				currentY + 3 // Adjusted
+				currentY + 3, // Adjusted
 			)
 			pdf.text(
 				`(+${section.correctScore} ball / ${section.wrongScore} ball)`,
 				130,
-				currentY + 3 // Adjusted
+				currentY + 3, // Adjusted
 			)
 
 			currentY += 5 // Reduced from 6mm to 5mm
@@ -477,7 +432,7 @@ function drawEmptyBubble(
 	pdf: jsPDF,
 	x: number,
 	y: number,
-	radius: number
+	radius: number,
 ): void {
 	pdf.setDrawColor(0, 0, 0)
 	pdf.setLineWidth(0.3)
@@ -491,7 +446,7 @@ function drawFilledBubble(
 	pdf: jsPDF,
 	x: number,
 	y: number,
-	radius: number
+	radius: number,
 ): void {
 	pdf.setFillColor(0, 0, 0)
 	pdf.circle(x, y, radius, 'F')
@@ -504,7 +459,7 @@ function drawPartialBubble(
 	pdf: jsPDF,
 	x: number,
 	y: number,
-	radius: number
+	radius: number,
 ): void {
 	pdf.setDrawColor(100, 100, 100)
 	pdf.setLineWidth(0.3)
@@ -521,7 +476,7 @@ function drawEmptyBubbleWithX(
 	pdf: jsPDF,
 	x: number,
 	y: number,
-	radius: number
+	radius: number,
 ): void {
 	pdf.setDrawColor(100, 100, 100)
 	pdf.setLineWidth(0.3)
@@ -552,7 +507,7 @@ export const generateFileName = (exam: Exam, setNumber: number): string => {
  */
 export const downloadPDF = async (
 	exam: Exam,
-	setNumber: number
+	setNumber: number,
 ): Promise<void> => {
 	try {
 		const doc = await generateExamPDF(exam, setNumber)
